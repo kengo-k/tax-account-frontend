@@ -1,0 +1,15 @@
+version: "3"
+services:
+  client:
+    build:
+      context: client
+    container_name: account_client
+    ports:
+      - 80:80
+    tty: true
+    volumes:
+      - "$PWD/client/project:/opt/project"
+networks:
+  default:
+    external:
+      name: account-api_account_net
