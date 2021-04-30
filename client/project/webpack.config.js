@@ -42,6 +42,7 @@ module.exports = {
       "@config": path.resolve(__dirname, "source/config"),
       "@api": path.resolve(__dirname, "source/api"),
       "@component": path.resolve(__dirname, "source/component"),
+      "@common": path.resolve(__dirname, "source/common"),
     },
   },
   devServer: {

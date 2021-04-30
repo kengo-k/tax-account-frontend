@@ -1,0 +1,3 @@
+[submodule "client/project/source/account-common"]
+	path = client/project/source/account-common
+	url = git@github.com:kurobanekengo/account-common.git
