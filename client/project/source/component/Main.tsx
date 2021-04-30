@@ -1,4 +1,5 @@
 import * as React from "react";
+import { History } from "history";
 import {
   BrowserRouter,
   Route,
@@ -8,6 +9,20 @@ import {
 import { JournalList } from "@component/journal/JournalList";
 import { LedgerList } from "@component/ledger/LedgerList";
 
+const getInitialContextValue = () => {
+  return {
+    history: (undefined as any) as History,
+    nendo: (undefined as any) as string,
+    ledgerCd: (undefined as any) as string,
+  };
+};
+
+export const Context = React.createContext<{
+  history: History;
+  nendo: string;
+  ledgerCd: string;
+}>(getInitialContextValue());
+
 export const Main = () => {
   return (
     <BrowserRouter>
@@ -15,8 +30,17 @@ export const Main = () => {
         <Route
           exact
           path="/"
-          render={() => {
-            return <JournalList />;
+          render={(routeProps: RouteComponentProps) => {
+            const contextValue = getInitialContextValue();
+            return (
+              <Context.Provider
+                value={Object.assign(contextValue, {
+                  history: routeProps.history,
+                })}
+              >
+                <JournalList />
+              </Context.Provider>
+            );
           }}
         />
         <Route
@@ -28,7 +52,17 @@ export const Main = () => {
             }>
           ) => {
             const p = routeProps.match.params;
-            return <JournalList nendo={p.nendo} />;
+            const contextValue = getInitialContextValue();
+            return (
+              <Context.Provider
+                value={Object.assign(contextValue, {
+                  history: routeProps.history,
+                  nendo: p.nendo,
+                })}
+              >
+                <JournalList nendo={p.nendo} />
+              </Context.Provider>
+            );
           }}
         />
         <Route
@@ -41,7 +75,17 @@ export const Main = () => {
             }>
           ) => {
             const p = routeProps.match.params;
-            return <LedgerList nendo={p.nendo} ledgerCd={p.ledgerCd} />;
+            return (
+              <Context.Provider
+                value={{
+                  history: routeProps.history,
+                  nendo: p.nendo,
+                  ledgerCd: p.ledgerCd,
+                }}
+              >
+                <LedgerList nendo={p.nendo} ledgerCd={p.ledgerCd} />
+              </Context.Provider>
+            );
           }}
         />
       </Switch>

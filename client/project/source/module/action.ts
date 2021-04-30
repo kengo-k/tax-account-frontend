@@ -24,6 +24,8 @@ module.epic().on(actions.loadInit, () => {
 
 module.reducer(getInitialState()).on(actions.setInit, (state, { initData }) => {
   state.nendoList = initData.nendoList;
+  state.kamokuList = initData.kamokuMasterList;
+  state.saimokuList = initData.saimokuMasterList;
 });
 
 export type Actions = typeof actions;
