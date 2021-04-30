@@ -11,6 +11,7 @@ const environment = process.env.NODE_ENV || "development";
 
 module.exports = {
   mode: "development",
+  devtool: "inline-source-map",
   entry: {
     "js/index": [
       "webpack-dev-server/client",
