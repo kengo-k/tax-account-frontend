@@ -1,73 +1,94 @@
 import * as React from "react";
-import { useActions, useState } from "@module/action";
+import { History } from "history";
+import {
+  BrowserRouter,
+  Route,
+  Switch,
+  RouteComponentProps,
+} from "react-router-dom";
+import { JournalList } from "@component/journal/JournalList";
+import { LedgerList } from "@component/ledger/LedgerList";
+
+const getInitialContextValue = () => {
+  return {
+    history: (undefined as any) as History,
+    nendo: (undefined as any) as string,
+    ledgerCd: (undefined as any) as string,
+  };
+};
+
+export const Context = React.createContext<{
+  history: History;
+  nendo: string;
+  ledgerCd: string;
+}>(getInitialContextValue());
 
 export const Main = () => {
-  const { loadInit } = useActions();
-  const state = useState();
-  React.useEffect(() => {
-    loadInit();
-  }, []);
   return (
-    <div>
-      <div>
-        <label>
-          年度:
-          <select>
-            <option></option>
-            {state.nendoList.map((n) => {
-              return <option key={n.nendo}>{n.nendo}</option>;
-            })}
-          </select>
-        </label>
-      </div>
-      <div>
-        <label>
-          <input type="radio" id="journal" value="journal" />
-          仕訳帳
-        </label>
-        <label>
-          <input type="radio" id="ledger" value="ledger" />
-          出納帳
-        </label>
-        <select>
-          <option></option>
-          <option>ゆうちょ銀行</option>
-          <option>消耗品費</option>
-        </select>
-      </div>
-      <hr />
-      <div>
-        <table>
-          <thead>
-            <tr>
-              <th>科目</th>
-              <th>金額(借方)</th>
-              <th>金額(貸方)</th>
-              <th>累計</th>
-              <th>備考</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>
-                <input type="text" />
-              </td>
-              <td>
-                <input type="text" />
-              </td>
-              <td>
-                <input type="text" />
-              </td>
-              <td>
-                <input type="text" />
-              </td>
-              <td>
-                <input type="text" />
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
+    <BrowserRouter>
+      <Switch>
+        <Route
+          exact
+          path="/"
+          render={(routeProps: RouteComponentProps) => {
+            const contextValue = getInitialContextValue();
+            return (
+              <Context.Provider
+                value={Object.assign(contextValue, {
+                  history: routeProps.history,
+                })}
+              >
+                <JournalList />
+              </Context.Provider>
+            );
+          }}
+        />
+        <Route
+          exact
+          path="/:nendo"
+          render={(
+            routeProps: RouteComponentProps<{
+              nendo: string;
+            }>
+          ) => {
+            const p = routeProps.match.params;
+            const contextValue = getInitialContextValue();
+            return (
+              <Context.Provider
+                value={Object.assign(contextValue, {
+                  history: routeProps.history,
+                  nendo: p.nendo,
+                })}
+              >
+                <JournalList nendo={p.nendo} />
+              </Context.Provider>
+            );
+          }}
+        />
+        <Route
+          exact
+          path="/:nendo/:ledgerCd"
+          render={(
+            routeProps: RouteComponentProps<{
+              nendo: string;
+              ledgerCd: string;
+            }>
+          ) => {
+            const p = routeProps.match.params;
+            return (
+              <Context.Provider
+                value={{
+                  history: routeProps.history,
+                  nendo: p.nendo,
+                  ledgerCd: p.ledgerCd,
+                }}
+              >
+                <LedgerList nendo={p.nendo} ledgerCd={p.ledgerCd} />
+              </Context.Provider>
+            );
+          }}
+        />
+      </Switch>
+    </BrowserRouter>
   );
 };
