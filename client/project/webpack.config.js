@@ -51,6 +51,7 @@ module.exports = {
     hot: true,
     inline: true,
     disableHostCheck: true,
+    historyApiFallback: true,
   },
   plugins: [
     new webpack.HotModuleReplacementPlugin(),
