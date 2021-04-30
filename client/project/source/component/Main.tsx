@@ -1,8 +1,9 @@
 import * as React from "react";
-import { useActions } from "@module/action";
+import { useActions, useState } from "@module/action";
 
 export const Main = () => {
   const { loadInit } = useActions();
+  const state = useState();
   React.useEffect(() => {
     loadInit();
   }, []);
@@ -12,9 +13,10 @@ export const Main = () => {
         <label>
           年度:
           <select>
-            <option>2021</option>
-            <option>2020</option>
-            <option>2019</option>
+            <option></option>
+            {state.nendoList.map((n) => {
+              return <option key={n.nendo}>{n.nendo}</option>;
+            })}
           </select>
         </label>
       </div>
