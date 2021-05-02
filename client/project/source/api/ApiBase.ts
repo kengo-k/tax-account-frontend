@@ -19,13 +19,17 @@ function getClient() {
 export const get = <REQ>(
   ver: number,
   apiCategory: string,
-  path: string,
+  pathWithParams: string,
   handler: (req: any) => REQ
 ) => {
   return async (_req: any) => {
+    let path = pathWithParams;
     const req: REQ = handler(_req);
     if (req == null) {
       throw new Error();
+    }
+    for (const key of Object.keys(req)) {
+      path = path.replace(`:${key}`, (req as any)[key]);
     }
     const client = getClient();
     const apiPath = `${apiCategory}/v${ver}/${path}`;
