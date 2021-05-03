@@ -5,6 +5,7 @@ import { PresentationApi } from "@api/presentation/PresentationApi";
 import { InitSearchResponse } from "@common/model/presentation/InitSearchResponse";
 import { LedgerSearchRequest } from "@common/model/journal/LedgerSearchRequest";
 import { LedgerSearchResponse } from "@common/model/journal/LedgerSearchResponse";
+import { JournalEntity } from "@common/model/journal/JournalEntity";
 
 const moduleSymbol = Symbol("account");
 const [module, actions, state] = createModule(moduleSymbol)
@@ -19,13 +20,19 @@ const [module, actions, state] = createModule(moduleSymbol)
     setLedger: (ledgerList: LedgerSearchResponse[]) => ({
       payload: { ledgerList },
     }),
+    updateJournal: (
+      id: string,
+      journal: Partial<Omit<JournalEntity, "id">>
+    ) => ({
+      payload: { id, journal },
+    }),
   })
   .withState<State>();
 
 module
   .epic()
   .on(actions.loadInit, () => {
-    return Rx.fromPromise(PresentationApi.selectInit({})).pipe(
+    return Rx.fromPromise(PresentationApi.selectInit()).pipe(
       Rx.map((res) => {
         return [actions.setInit(res.data.body)];
       })
@@ -41,6 +48,11 @@ module
       Rx.map((res) => {
         return [actions.setLedger(res.data.body)];
       })
+    );
+  })
+  .on(actions.updateJournal, ({ id, journal }) => {
+    return Rx.fromPromise(PresentationApi.updateJournal(id, journal)).pipe(
+      Rx.map((res) => [])
     );
   });
 

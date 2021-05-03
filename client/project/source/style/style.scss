@@ -1,0 +1,23 @@
+.ledgerHeader {
+  &-date {
+  }
+}
+
+.ledgerBody {
+  &-date {
+    input {
+      width: 100px;
+    }
+  }
+  .value {
+    width: 100px;
+  }
+}
+
+.num {
+  text-align: right;
+}
+
+.readonly {
+  background-color: #cccccc;
+}

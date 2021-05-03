@@ -15,17 +15,17 @@ export const LedgerList = (props: { nendo: string; ledgerCd: string }) => {
       <hr />
       <div>
         <table>
-          <thead>
+          <thead className="ledgerHeader">
             <tr>
-              <th>登録日</th>
-              <th>相手科目</th>
-              <th>金額(借方)</th>
-              <th>金額(貸方)</th>
-              <th>累計</th>
-              <th>備考</th>
+              <th className="ledgerHeader-date">登録日</th>
+              <th className="ledgerHeader-anotherCd">相手科目</th>
+              <th className="ledgerHeader-karikataValue">金額(借方)</th>
+              <th className="ledgerHeader-kasikataValue">金額(貸方)</th>
+              <th className="ledgerHeader-acc">累計</th>
+              <th className="ledgerHeader-note">備考</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="ledgerBody">
             {state.ledgerList.map((row) => {
               return <LedgerListRow key={row.date} ledger={row} />;
             })}
