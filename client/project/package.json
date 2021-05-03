@@ -18,7 +18,8 @@
     "react-router": "^5.2.0",
     "react-router-dom": "^5.2.0",
     "rxjs": "^6.5.4",
-    "typeless": "^1.5.0"
+    "typeless": "^1.5.0",
+    "use-debounce": "^6.0.1"
   },
   "devDependencies": {
     "@types/axios": "^0.14.0",
