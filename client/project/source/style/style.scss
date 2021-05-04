@@ -14,10 +14,23 @@
   }
 }
 
+.ledgerListError {
+  border: 1px #cccccc solid;
+  background-color: pink;
+  .ledgerListErrorItem {
+    display: inline-block;
+    margin-left: 10px;
+  }
+}
+
 .num {
   text-align: right;
 }
 
 .readonly {
   background-color: #cccccc;
+}
+
+.error {
+  background-color: pink;
 }

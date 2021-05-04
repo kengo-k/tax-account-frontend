@@ -22,9 +22,10 @@ const [module, actions, state] = createModule(moduleSymbol)
     }),
     updateJournal: (
       id: string,
-      journal: Partial<Omit<JournalEntity, "id">>
+      journal: Partial<Omit<JournalEntity, "id">>,
+      nextActions?: any[] | (() => any[])
     ) => ({
-      payload: { id, journal },
+      payload: { id, journal, nextActions },
     }),
   })
   .withState<State>();
@@ -50,9 +51,18 @@ module
       })
     );
   })
-  .on(actions.updateJournal, ({ id, journal }) => {
+  .on(actions.updateJournal, ({ id, journal, nextActions }) => {
     return Rx.fromPromise(PresentationApi.updateJournal(id, journal)).pipe(
-      Rx.map((res) => [])
+      Rx.map(() => {
+        if (nextActions == null) {
+          return [];
+        }
+        if (typeof nextActions === "function") {
+          return nextActions();
+        } else {
+          return nextActions;
+        }
+      })
     );
   });
 
@@ -82,3 +92,5 @@ export const getState = () => {
 };
 
 export const useModule = module;
+
+export { actions };

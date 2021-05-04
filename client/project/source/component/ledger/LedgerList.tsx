@@ -2,10 +2,20 @@ import * as React from "react";
 import { useActions, useState } from "@module/action";
 import { Header } from "@component/header/Header";
 import { LedgerListRow } from "@component/ledger/LedgerListRow";
+import {
+  LedgerListInputErrors,
+  LedgerListInputErrorItem,
+  SetLedgerListInputError,
+  LedgerListError,
+} from "@component/ledger/LedgerListError";
 
 export const LedgerList = (props: { nendo: string; ledgerCd: string }) => {
   const { loadLedger } = useActions();
   const state = useState();
+  const [errors, setErrors] = React.useState(
+    new Map() as LedgerListInputErrors
+  );
+  console.log("list: ", state.ledgerList.map((l) => l.journal_id).join(","));
   React.useEffect(() => {
     loadLedger({ nendo: props.nendo, target_cd: props.ledgerCd });
   }, [props]);
@@ -13,7 +23,8 @@ export const LedgerList = (props: { nendo: string; ledgerCd: string }) => {
     <div>
       <Header />
       <hr />
-      <div>
+      <LedgerListError errors={errors} />
+      <div className="ledgerList">
         <table>
           <thead className="ledgerHeader">
             <tr>
@@ -27,7 +38,36 @@ export const LedgerList = (props: { nendo: string; ledgerCd: string }) => {
           </thead>
           <tbody className="ledgerBody">
             {state.ledgerList.map((row) => {
-              return <LedgerListRow key={row.date} ledger={row} />;
+              let error: LedgerListInputErrorItem = {};
+              if (errors.has(row.journal_id)) {
+                error = errors.get(row.journal_id) ?? {};
+              }
+              const setError: SetLedgerListInputError = (key, errorInfo) => {
+                if (errorInfo.hasError) {
+                  const newError = Object.assign({}, error);
+                  newError[key] = {
+                    message: errorInfo.message,
+                    inputValue: errorInfo.inputValue,
+                  };
+                  errors.set(row.journal_id, newError);
+                } else {
+                  const newError = Object.assign({}, error);
+                  delete newError[key];
+                  errors.set(row.journal_id, newError);
+                }
+              };
+              const notifyError = () => {
+                setErrors(new Map(errors));
+              };
+              return (
+                <LedgerListRow
+                  key={row.date}
+                  ledger={row}
+                  error={error}
+                  setError={setError}
+                  notifyError={notifyError}
+                />
+              );
             })}
           </tbody>
         </table>
