@@ -150,15 +150,3 @@ export const LedgerListRow = (props: {
     </tr>
   );
 };
-
-const showValue = (value: number): string => {
-  return value === 0 ? "" : `${value}`;
-};
-
-const showDate = (dateStr: string): string => {
-  const date = DateTime.fromFormat(dateStr, "yyyymmdd");
-  if (date.invalidReason == null) {
-    return date.toFormat("yyyy/mm/dd");
-  }
-  return dateStr;
-};

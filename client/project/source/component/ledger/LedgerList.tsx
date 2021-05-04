@@ -15,10 +15,11 @@ export const LedgerList = (props: { nendo: string; ledgerCd: string }) => {
   const [errors, setErrors] = React.useState(
     new Map() as LedgerListInputErrors
   );
-  console.log("list: ", state.ledgerList.map((l) => l.journal_id).join(","));
+
   React.useEffect(() => {
     loadLedger({ nendo: props.nendo, target_cd: props.ledgerCd });
   }, [props]);
+
   return (
     <div>
       <Header />
