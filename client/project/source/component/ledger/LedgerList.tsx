@@ -42,8 +42,6 @@ export const LedgerList = (props: { nendo: string; ledgerCd: string }) => {
               let error: LedgerListInputErrorItem = {};
               if (errors.has(row.journal_id)) {
                 error = errors.get(row.journal_id) ?? {};
-              } else {
-                errors.set(row.journal_id, error);
               }
               const setError: SetLedgerListInputError = (key, errorInfo) => {
                 if (errorInfo.hasError) {
