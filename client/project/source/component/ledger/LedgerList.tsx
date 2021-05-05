@@ -42,19 +42,24 @@ export const LedgerList = (props: { nendo: string; ledgerCd: string }) => {
               let error: LedgerListInputErrorItem = {};
               if (errors.has(row.journal_id)) {
                 error = errors.get(row.journal_id) ?? {};
+              } else {
+                errors.set(row.journal_id, error);
               }
               const setError: SetLedgerListInputError = (key, errorInfo) => {
                 if (errorInfo.hasError) {
-                  const newError = Object.assign({}, error);
-                  newError[key] = {
+                  error = Object.assign({}, error);
+                  error[key] = {
                     message: errorInfo.message,
-                    inputValue: errorInfo.inputValue,
+                    targetId: errorInfo.targetId,
                   };
-                  errors.set(row.journal_id, newError);
+                  errors.set(row.journal_id, error);
                 } else {
-                  const newError = Object.assign({}, error);
-                  delete newError[key];
-                  errors.set(row.journal_id, newError);
+                  error = Object.assign({}, error);
+                  delete error[key];
+                  errors.set(row.journal_id, error);
+                  if (Object.keys(error).length === 0) {
+                    errors.delete(row.journal_id);
+                  }
                 }
               };
               const notifyError = () => {
@@ -62,7 +67,7 @@ export const LedgerList = (props: { nendo: string; ledgerCd: string }) => {
               };
               return (
                 <LedgerListRow
-                  key={row.date}
+                  key={row.journal_id}
                   ledger={row}
                   error={error}
                   setError={setError}

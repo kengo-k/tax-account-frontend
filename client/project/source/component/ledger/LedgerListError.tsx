@@ -1,18 +1,34 @@
 import * as React from "react";
+import flatmap from "lodash.flatmap";
+import { LedgerSearchResponse } from "@common/model/journal/LedgerSearchResponse";
 
-export interface Error {
-  hasError: true;
-  message: string;
-  inputValue: string;
+interface Valid {
+  hasError: false;
 }
 
-export interface Valid {
-  hasError: false;
+interface Invalid {
+  hasError: true;
+  message: string;
+  targetId: Array<
+    keyof Pick<
+      LedgerSearchResponse,
+      "date" | "karikata_value" | "kasikata_value" | "another_cd"
+    >
+  >;
 }
 
 // 入力行単位のエラー情報
 export interface LedgerListInputErrorItem {
-  date?: Omit<Error, "hasError">;
+  date_required?: Omit<Invalid, "hasError">;
+  date_format?: Omit<Invalid, "hasError">;
+  cd_required?: Omit<Invalid, "hasError">;
+  cd_invalid?: Omit<Invalid, "hasError">;
+  kari_format?: Omit<Invalid, "hasError">;
+  kari_negative?: Omit<Invalid, "hasError">;
+  kasi_format?: Omit<Invalid, "hasError">;
+  kasi_negative?: Omit<Invalid, "hasError">;
+  value_both?: Omit<Invalid, "hasError">;
+  value_neither?: Omit<Invalid, "hasError">;
 }
 
 // key: journal_id: 行を特定する情報
@@ -21,62 +37,32 @@ export type LedgerListInputErrors = Map<string, LedgerListInputErrorItem>;
 
 export type SetLedgerListInputError = (
   key: keyof LedgerListInputErrorItem,
-  errorInfo: Error | Valid
+  errorInfo: Valid | Invalid
 ) => void;
 
-type LedgerListErrorSummary = Map<
-  keyof LedgerListInputErrorItem,
-  { message: string; details: { journalId: string; inputValue: string }[] }
->;
-
 export const LedgerListError = (props: { errors: LedgerListInputErrors }) => {
-  const errorSummary: LedgerListErrorSummary = new Map();
-  for (const journalId of Array.from(props.errors.keys())) {
-    const errorInfo = props.errors.get(journalId);
-    if (errorInfo == null) {
-      continue;
-    }
-    if (errorInfo.date != null) {
-      let dateSummary = errorSummary.get("date");
-      if (dateSummary == null) {
-        dateSummary = { message: errorInfo.date.message, details: [] };
-        errorSummary.set("date", dateSummary);
-      }
-      dateSummary.details.push({
-        journalId,
-        inputValue: errorInfo.date.inputValue,
-      });
-    }
-  }
-  return (
-    <div className="ledgerListError">
-      {errorSummary.get("date") != null ? (
-        <ul>{createErrorMessage("date", errorSummary)}</ul>
-      ) : (
-        <></>
-      )}
-    </div>
-  );
-};
-
-const createErrorMessage = (
-  key: keyof LedgerListInputErrorItem,
-  errorSummary: LedgerListErrorSummary
-) => {
-  const errors = errorSummary.get(key);
-  if (errors == null) {
+  if (props.errors.size === 0) {
     return <></>;
   }
+
   return (
-    <li>
-      <span>{errors.message}</span>
-      {errors.details.map((d) => {
-        return (
-          <>
-            <span className="ledgerListErrorItem">{d.inputValue}</span>
-          </>
-        );
-      })}
-    </li>
+    <div className="ledgerListError">
+      <ul>
+        {flatmap(Array.from(props.errors.keys()), (journalId) => {
+          const errorItem = props.errors.get(journalId);
+          if (errorItem == null) {
+            return [];
+          }
+          const ret: any[] = [];
+          const keys = Object.keys(errorItem);
+          for (const key of keys) {
+            if ((errorItem as any)[key] != null) {
+              ret.push(<li>{(errorItem as any)[key].message}</li>);
+            }
+          }
+          return ret;
+        })}
+      </ul>
+    </div>
   );
 };

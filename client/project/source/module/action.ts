@@ -93,4 +93,4 @@ export const getState = () => {
 
 export const useModule = module;
 
-export { actions };
+export { actions, state };
