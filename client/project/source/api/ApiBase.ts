@@ -85,7 +85,7 @@ export const putWithId = <BODYPARAMS>(
   pathWithParams: string,
   checkBodyParams: ((bodyParams: BODYPARAMS) => void) | undefined
 ) => {
-  return async (id: string, bodyParams: BODYPARAMS) => {
+  return async (id: number, bodyParams: BODYPARAMS) => {
     return putWithPathParams(
       ver,
       apiCategory,

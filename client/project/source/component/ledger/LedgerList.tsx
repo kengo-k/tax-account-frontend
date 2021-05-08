@@ -17,7 +17,7 @@ export const LedgerList = (props: { nendo: string; ledgerCd: string }) => {
   );
 
   React.useEffect(() => {
-    loadLedger({ nendo: props.nendo, target_cd: props.ledgerCd });
+    loadLedger({ nendo: props.nendo, ledger_cd: props.ledgerCd });
   }, [props]);
 
   return (
@@ -40,8 +40,8 @@ export const LedgerList = (props: { nendo: string; ledgerCd: string }) => {
           <tbody className="ledgerBody">
             {state.ledgerList.map((row) => {
               let error: LedgerListInputErrorItem = {};
-              if (errors.has(row.journal_id)) {
-                error = errors.get(row.journal_id) ?? {};
+              if (errors.has(`${row.journal_id}`)) {
+                error = errors.get(`${row.journal_id}`) ?? {};
               }
               const setError: SetLedgerListInputError = (key, errorInfo) => {
                 if (errorInfo.hasError) {
@@ -50,13 +50,13 @@ export const LedgerList = (props: { nendo: string; ledgerCd: string }) => {
                     message: errorInfo.message,
                     targetId: errorInfo.targetId,
                   };
-                  errors.set(row.journal_id, error);
+                  errors.set(`${row.journal_id}`, error);
                 } else {
                   error = Object.assign({}, error);
                   delete error[key];
-                  errors.set(row.journal_id, error);
+                  errors.set(`${row.journal_id}`, error);
                   if (Object.keys(error).length === 0) {
-                    errors.delete(row.journal_id);
+                    errors.delete(`${row.journal_id}`);
                   }
                 }
               };

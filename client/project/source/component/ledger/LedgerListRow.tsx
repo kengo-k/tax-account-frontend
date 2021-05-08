@@ -3,7 +3,8 @@ import { useSelector } from "typeless";
 import { useDebouncedCallback } from "use-debounce";
 import { DateTime } from "luxon";
 import Numeral from "numeral";
-import { useActions, actions } from "@module/action";
+import flatmap from "lodash.flatmap";
+import { useActions, actions, useState } from "@module/action";
 import { selectSaimokuMap } from "@module/selector/selectSaimokuMap";
 import { LedgerSearchResponse } from "@common/model/journal/LedgerSearchResponse";
 import {
@@ -11,6 +12,8 @@ import {
   SetLedgerListInputError,
 } from "@component/ledger/LedgerListError";
 import { Context } from "@component/Main";
+import { SaimokuMasterEntity } from "@common/model/master/SaimokuMasterEntity";
+import { LedgerUpdateRequest } from "@common/model/journal/LedgerUpdateRequest";
 
 export const LedgerListRow = (props: {
   ledger: LedgerSearchResponse;
@@ -18,7 +21,8 @@ export const LedgerListRow = (props: {
   setError: SetLedgerListInputError;
   notifyError: () => void;
 }) => {
-  const { updateJournal } = useActions();
+  const { updateJournal, updateLedger } = useActions();
+  const { saimokuList } = useState();
   const saimokuMap = useSelector(selectSaimokuMap);
 
   const [dateStr, setDate] = React.useState(props.ledger.date);
@@ -26,9 +30,18 @@ export const LedgerListRow = (props: {
   const [kariValueStr, setKariValue] = React.useState(`${props.ledger.karikata_value}`);
   // prettier-ignore
   const [kasiValueStr, setKasiValue] = React.useState(`${props.ledger.kasikata_value}`);
+  const [cd, setCd] = React.useState(props.ledger.another_cd);
+  const [cdSelectMode, setCdSelectMode] = React.useState(false);
+  const [cdSearchKey, setCdSearchKey] = React.useState(props.ledger.another_cd);
+  const [filterdSaimokuList, setFilterdSaimokuList] = React.useState(
+    [] as SaimokuMasterEntity[]
+  );
+  let cdCandidateUseMode = false;
 
   const kariRef = React.createRef<HTMLInputElement>();
   const kasiRef = React.createRef<HTMLInputElement>();
+  const cdSearchRef = React.createRef<HTMLInputElement>();
+  const cdCandidateRef = React.createRef<HTMLSelectElement>();
 
   const context = React.useContext(Context);
   // 更新後に必要な処理
@@ -44,7 +57,7 @@ export const LedgerListRow = (props: {
     ret.push(
       actions.loadLedger({
         nendo: context.nendo,
-        target_cd: context.ledgerCd,
+        ledger_cd: context.ledgerCd,
       })
     );
     return ret;
@@ -59,10 +72,9 @@ export const LedgerListRow = (props: {
     );
   }, 1500);
 
-  const updateValueDebounced = useDebouncedCallback(
-    // prettier-ignore
-    (targetKey: "karikata_value" | "kasikata_value", value: number) => {
-      updateJournal(props.ledger.journal_id, { [targetKey]: value }, reloadLedger());
+  const updateLedgerDebounced = useDebouncedCallback(
+    (request: LedgerUpdateRequest) => {
+      updateLedger(request.id, request);
     },
     1500
   );
@@ -116,7 +128,13 @@ export const LedgerListRow = (props: {
       });
       return;
     }
-    updateValueDebounced("karikata_value", value);
+    updateLedgerDebounced({
+      id: props.ledger.journal_id,
+      ledger_cd: context.ledgerCd,
+      other_cd: props.ledger.another_cd,
+      karikata_value: value,
+      kasikata_value: null,
+    });
   };
 
   // 貸方金額更新処理
@@ -145,7 +163,13 @@ export const LedgerListRow = (props: {
       });
       return;
     }
-    updateValueDebounced("kasikata_value", value);
+    updateLedgerDebounced({
+      id: props.ledger.journal_id,
+      ledger_cd: context.ledgerCd,
+      other_cd: props.ledger.another_cd,
+      karikata_value: null,
+      kasikata_value: value,
+    });
   };
 
   // 借方・貸方関連チェック
@@ -172,6 +196,25 @@ export const LedgerListRow = (props: {
     return true;
   };
 
+  const updateCd = (other_cd: string) => {
+    const toNumber = (s: string | undefined) => {
+      if (s == null) {
+        return null;
+      }
+      if (s.length === 0) {
+        return null;
+      }
+      return Number(s);
+    };
+    updateLedgerDebounced({
+      id: props.ledger.journal_id,
+      ledger_cd: context.ledgerCd,
+      other_cd,
+      karikata_value: toNumber(kariRef.current?.value),
+      kasikata_value: toNumber(kasiRef.current?.value),
+    });
+  };
+
   React.useEffect(() => {
     const date = DateTime.fromFormat(dateStr, "yyyymmdd");
     if (date.invalidReason == null) {
@@ -186,6 +229,29 @@ export const LedgerListRow = (props: {
       setKasiValue("");
     }
   }, []);
+
+  React.useEffect(() => {
+    if (cdSearchRef.current != null) {
+      cdSearchRef.current.focus();
+      //cdSearchRef.current.select();
+    }
+  }, [cdSearchRef]);
+
+  React.useEffect(() => {
+    const filterdSaimokuList = flatmap(saimokuList, (s) => {
+      if (s.saimoku_cd.toLowerCase().startsWith(cdSearchKey.toLowerCase())) {
+        return [s];
+      }
+      if (
+        s.saimoku_kana_name.toLowerCase().indexOf(cdSearchKey.toLowerCase()) >
+        -1
+      ) {
+        return [s];
+      }
+      return [];
+    });
+    setFilterdSaimokuList(filterdSaimokuList);
+  }, [cdSearchKey, saimokuList]);
 
   return (
     <tr>
@@ -221,12 +287,73 @@ export const LedgerListRow = (props: {
         />
       </td>
       <td className="ledgerBody-anotherCd">
-        <input
-          type="text"
-          value={`${props.ledger.another_cd}:${
-            saimokuMap.get(props.ledger.another_cd)?.saimoku_ryaku_name
-          }`}
-        />
+        {cdSelectMode ? (
+          <div className="cdSelect">
+            <input
+              type="text"
+              value={cdSearchKey}
+              onChange={(e: React.FocusEvent<HTMLInputElement>) => {
+                setCdSearchKey(e.target.value);
+              }}
+              onBlur={(e: React.FocusEvent<HTMLInputElement>) => {
+                setTimeout(() => {
+                  if (!cdCandidateUseMode) {
+                    setCdSelectMode(false);
+                  }
+                }, 1);
+              }}
+              onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+                if (e.key === "ArrowDown") {
+                  if (cdCandidateRef.current != null) {
+                    cdCandidateRef.current.focus();
+                    cdCandidateRef.current.value =
+                      filterdSaimokuList[0].saimoku_cd;
+                  }
+                }
+              }}
+              className="search"
+              ref={cdSearchRef}
+            />
+            <select
+              size={7}
+              className="candidate"
+              tabIndex={-1}
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
+                if (cdSearchRef.current != null) {
+                  cdSearchRef.current.value = e.target.value;
+                }
+              }}
+              onFocus={(e: React.FocusEvent<HTMLSelectElement>) => {
+                cdCandidateUseMode = true;
+              }}
+              onBlur={(e: React.FocusEvent<HTMLSelectElement>) => {
+                cdCandidateUseMode = false;
+                setCdSelectMode(false);
+                setCd(e.target.value);
+                updateCd(e.target.value);
+              }}
+              ref={cdCandidateRef}
+            >
+              {filterdSaimokuList.map((s) => {
+                console.log(filterdSaimokuList.length);
+                return (
+                  <option key={s.saimoku_cd} value={s.saimoku_cd}>
+                    {`${s.saimoku_cd}:${s.saimoku_ryaku_name}`}
+                  </option>
+                );
+              })}
+            </select>
+          </div>
+        ) : (
+          <input
+            type="text"
+            value={`${cd}:${saimokuMap.get(cd)?.saimoku_ryaku_name}`}
+            onFocus={(e: React.FocusEvent<HTMLInputElement>) => {
+              setCdSelectMode(true);
+              setCdSearchKey(props.ledger.another_cd);
+            }}
+          />
+        )}
       </td>
       <td className="ledgerBody-karikataValue">
         <input

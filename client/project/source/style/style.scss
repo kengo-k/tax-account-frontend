@@ -12,6 +12,20 @@
   .value {
     width: 100px;
   }
+
+  &-anotherCd {
+    .cdSelect {
+      position: relative;
+      .search {
+        position: absolute;
+        top: -11px;
+      }
+      .candidate {
+        position: absolute;
+        top: 10px;
+      }
+    }
+  }
 }
 
 .ledgerListError {

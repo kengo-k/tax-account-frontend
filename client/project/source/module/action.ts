@@ -6,6 +6,7 @@ import { InitSearchResponse } from "@common/model/presentation/InitSearchRespons
 import { LedgerSearchRequest } from "@common/model/journal/LedgerSearchRequest";
 import { LedgerSearchResponse } from "@common/model/journal/LedgerSearchResponse";
 import { JournalEntity } from "@common/model/journal/JournalEntity";
+import { LedgerUpdateRequest } from "@common/model/journal/LedgerUpdateRequest";
 
 const moduleSymbol = Symbol("account");
 const [module, actions, state] = createModule(moduleSymbol)
@@ -21,11 +22,14 @@ const [module, actions, state] = createModule(moduleSymbol)
       payload: { ledgerList },
     }),
     updateJournal: (
-      id: string,
+      id: number,
       journal: Partial<Omit<JournalEntity, "id">>,
       nextActions?: any[] | (() => any[])
     ) => ({
       payload: { id, journal, nextActions },
+    }),
+    updateLedger: (id: number, ledger: Omit<LedgerUpdateRequest, "id">) => ({
+      payload: { id, ledger },
     }),
   })
   .withState<State>();
@@ -43,7 +47,7 @@ module
     return Rx.fromPromise(
       PresentationApi.selectLedger({
         nendo: ledgerSearchRequest.nendo,
-        ledgerCd: ledgerSearchRequest.target_cd,
+        ledger_cd: ledgerSearchRequest.ledger_cd,
       })
     ).pipe(
       Rx.map((res) => {
@@ -64,14 +68,26 @@ module
         }
       })
     );
+  })
+  .on(actions.updateLedger, ({ id, ledger }) => {
+    return Rx.fromPromise(PresentationApi.updateLedger(id, ledger)).pipe(
+      Rx.map((res) => {
+        return [
+          actions.loadLedger({
+            nendo: res.data.body.nendo,
+            ledger_cd: ledger.ledger_cd,
+          }),
+        ];
+      })
+    );
   });
 
 module
   .reducer(getInitialState())
   .on(actions.setInit, (state, { initData }) => {
-    state.nendoList = initData.nendoList;
-    state.kamokuList = initData.kamokuMasterList;
-    state.saimokuList = initData.saimokuMasterList;
+    state.nendoList = initData.nendo_list;
+    state.kamokuList = initData.kamoku_list;
+    state.saimokuList = initData.saimoku_list;
   })
   .on(actions.setLedger, (state, { ledgerList }) => {
     state.ledgerList = ledgerList;
