@@ -1,4 +1,5 @@
 import * as React from "react";
+import flatmap from "lodash.flatmap";
 import { DateTime } from "luxon";
 import { useActions, useState } from "@module/action";
 import { Header } from "@component/header/Header";
@@ -11,6 +12,7 @@ import {
   LedgerListError,
 } from "@component/ledger/LedgerListError";
 import { LedgerSearchResponse } from "@common/model/journal/LedgerSearchResponse";
+import { SaimokuMasterEntity } from "@common/model/master/SaimokuMasterEntity";
 
 export const LedgerList = (props: { nendo: string; ledgerCd: string }) => {
   const { loadLedger } = useActions();
@@ -121,4 +123,19 @@ export const toRawDate = (dateStr: string) => {
     return date2.toFormat("yyyymmdd");
   }
   throw new Error();
+};
+
+export const filterSaimokuList = (
+  saimokuList: SaimokuMasterEntity[],
+  cd: string
+) => {
+  return flatmap(saimokuList, (s) => {
+    if (s.saimoku_cd.toLowerCase().startsWith(cd.toLowerCase())) {
+      return [s];
+    }
+    if (s.saimoku_kana_name.toLowerCase().indexOf(cd.toLowerCase()) > -1) {
+      return [s];
+    }
+    return [];
+  });
 };

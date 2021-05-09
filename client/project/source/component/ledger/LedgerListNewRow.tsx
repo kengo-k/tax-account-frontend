@@ -11,7 +11,11 @@ import {
 } from "@component/ledger/LedgerListError";
 import { Context } from "@component/Main";
 import { SaimokuMasterEntity } from "@common/model/master/SaimokuMasterEntity";
-import { toNumber, toRawDate } from "@component/ledger/LedgerList";
+import {
+  toNumber,
+  toRawDate,
+  filterSaimokuList,
+} from "@component/ledger/LedgerList";
 
 export const LedgerListNewRow = (props: {
   error: Readonly<LedgerListInputErrorItem>;
@@ -23,44 +27,19 @@ export const LedgerListNewRow = (props: {
   const saimokuMap = useSelector(selectSaimokuMap);
 
   const [dateStr, setDate] = React.useState("");
-  // prettier-ignore
   const [kariValueStr, setKariValue] = React.useState("");
-  // prettier-ignore
   const [kasiValueStr, setKasiValue] = React.useState("");
   const [cd, setCd] = React.useState("");
   const [cdName, setCdName] = React.useState("");
-  // const [hasOtherCdFocus, setHasOtherCdFocus] = React.useState(false);
-  // const [useOtherCdCandidate, setUseOtherCdCandidate] = React.useState(false);
   const [cdSelectMode, setCdSelectMode] = React.useState(false);
-
   const [filterdSaimokuList, setFilterdSaimokuList] = React.useState(
     [] as SaimokuMasterEntity[]
   );
 
   const kariRef = React.createRef<HTMLInputElement>();
   const kasiRef = React.createRef<HTMLInputElement>();
-  const cdSearchRef = React.createRef<HTMLInputElement>();
-  const cdCandidateRef = React.createRef<HTMLSelectElement>();
 
   const context = React.useContext(Context);
-  // 更新後に必要な処理
-  // 金額等を更新すると累計金額が全体的に変更されるため全データを取り直す必要がある。
-  const reloadLedger = (needClear?: boolean) => {
-    const ret = [];
-    if (needClear) {
-      // 日付を変更する場合、データの並び順が変わってしまうがその場合、
-      // 再描画で行が重複してしまう(※原因要調査)ため事前にクリア処理をする。
-      // ただしクリアするとフォーカスを失う模様。
-      ret.push(actions.setLedger([]));
-    }
-    ret.push(
-      actions.loadLedger({
-        nendo: context.nendo,
-        ledger_cd: context.ledgerCd,
-      })
-    );
-    return ret;
-  };
 
   const updateDate = (dateStr: string) => {
     props.setError("date_required", { hasError: false });
@@ -73,6 +52,8 @@ export const LedgerListNewRow = (props: {
       });
       return false;
     }
+    // 日付項目にフォーカスがあるかどうかで表示形式が2パターン存在するため、
+    // 二通りのフォーマットでチェックしどちらか片方がOKの場合に更新する
     const date1 = DateTime.fromFormat(dateStr, "yyyymmdd");
     const date2 = DateTime.fromFormat(dateStr, "yyyy/mm/dd");
     if (date1.invalidReason == null || date2.invalidReason == null) {
@@ -91,7 +72,10 @@ export const LedgerListNewRow = (props: {
   const updateKariValue = (valueStr: string) => {
     props.setError("kari_format", { hasError: false });
     props.setError("kari_negative", { hasError: false });
-    updateValues(valueStr, kasiRef.current!.value);
+    const ret = updateValues(valueStr, kasiRef.current!.value);
+    if (!ret) {
+      return false;
+    }
     if (isEmpty(valueStr)) {
       return true;
     }
@@ -120,7 +104,10 @@ export const LedgerListNewRow = (props: {
   const updateKasiValue = (valueStr: string) => {
     props.setError("kasi_format", { hasError: false });
     props.setError("kasi_negative", { hasError: false });
-    updateValues(valueStr, kariRef.current!.value);
+    const ret = updateValues(valueStr, kariRef.current!.value);
+    if (!ret) {
+      return false;
+    }
     if (isEmpty(valueStr)) {
       return true;
     }
@@ -219,15 +206,7 @@ export const LedgerListNewRow = (props: {
   };
 
   React.useEffect(() => {
-    const filterdSaimokuList = flatmap(saimokuList, (s) => {
-      if (s.saimoku_cd.toLowerCase().startsWith(cd.toLowerCase())) {
-        return [s];
-      }
-      if (s.saimoku_kana_name.toLowerCase().indexOf(cd.toLowerCase()) > -1) {
-        return [s];
-      }
-      return [];
-    });
+    const filterdSaimokuList = filterSaimokuList(saimokuList, cd);
     setFilterdSaimokuList(filterdSaimokuList);
   }, [cd, saimokuList]);
 
@@ -301,15 +280,9 @@ export const LedgerListNewRow = (props: {
                 ? "error"
                 : ""
             }`}
-            ref={cdSearchRef}
           />
           {cdSelectMode ? (
-            <select
-              size={5}
-              className="candidate"
-              tabIndex={-1}
-              ref={cdCandidateRef}
-            >
+            <select size={5} className="candidate" tabIndex={-1}>
               {filterdSaimokuList.map((s) => {
                 return (
                   <option key={s.saimoku_cd} value={s.saimoku_cd}>
@@ -334,9 +307,6 @@ export const LedgerListNewRow = (props: {
             setKariValue(e.target.value);
             updateKariValue(e.target.value);
           }}
-          onBlur={(e: React.ChangeEvent<HTMLInputElement>) => {
-            props.notifyError();
-          }}
           onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
             if (e.key === "Enter") {
               save();
@@ -360,9 +330,6 @@ export const LedgerListNewRow = (props: {
           onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
             setKasiValue(e.target.value);
             updateKasiValue(e.target.value);
-          }}
-          onBlur={(e: React.ChangeEvent<HTMLInputElement>) => {
-            props.notifyError();
           }}
           onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
             if (e.key === "Enter") {

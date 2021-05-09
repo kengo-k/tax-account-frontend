@@ -15,7 +15,7 @@ import {
 import { Context } from "@component/Main";
 import { SaimokuMasterEntity } from "@common/model/master/SaimokuMasterEntity";
 import { LedgerUpdateRequest } from "@common/model/journal/LedgerUpdateRequest";
-import { toNumber } from "@component/ledger/LedgerList";
+import { toNumber, filterSaimokuList } from "@component/ledger/LedgerList";
 
 export const LedgerListRow = (props: {
   ledger: LedgerSearchResponse;
@@ -41,10 +41,9 @@ export const LedgerListRow = (props: {
 
   const kariRef = React.createRef<HTMLInputElement>();
   const kasiRef = React.createRef<HTMLInputElement>();
-  const cdSearchRef = React.createRef<HTMLInputElement>();
-  const cdCandidateRef = React.createRef<HTMLSelectElement>();
 
   const context = React.useContext(Context);
+
   // 更新後に必要な処理
   // 金額等を更新すると累計金額が全体的に変更されるため全データを取り直す必要がある。
   const reloadLedger = (needClear?: boolean) => {
@@ -273,15 +272,7 @@ export const LedgerListRow = (props: {
   }, [saimokuMap]);
 
   React.useEffect(() => {
-    const filterdSaimokuList = flatmap(saimokuList, (s) => {
-      if (s.saimoku_cd.toLowerCase().startsWith(cd.toLowerCase())) {
-        return [s];
-      }
-      if (s.saimoku_kana_name.toLowerCase().indexOf(cd.toLowerCase()) > -1) {
-        return [s];
-      }
-      return [];
-    });
+    const filterdSaimokuList = filterSaimokuList(saimokuList, cd);
     setFilterdSaimokuList(filterdSaimokuList);
   }, [cd, saimokuList]);
 
@@ -339,15 +330,9 @@ export const LedgerListRow = (props: {
                 ? "error"
                 : ""
             }`}
-            ref={cdSearchRef}
           />
           {cdSelectMode ? (
-            <select
-              size={5}
-              className="candidate"
-              tabIndex={-1}
-              ref={cdCandidateRef}
-            >
+            <select size={5} className="candidate" tabIndex={-1}>
               {filterdSaimokuList.map((s) => {
                 return (
                   <option key={s.saimoku_cd} value={s.saimoku_cd}>
