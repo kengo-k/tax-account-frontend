@@ -7,6 +7,7 @@ import { LedgerSearchRequest } from "@common/model/journal/LedgerSearchRequest";
 import { LedgerSearchResponse } from "@common/model/journal/LedgerSearchResponse";
 import { JournalEntity } from "@common/model/journal/JournalEntity";
 import { LedgerUpdateRequest } from "@common/model/journal/LedgerUpdateRequest";
+import { LedgerCreateRequest } from "@common/model/journal/LedgerCreateRequest";
 
 const moduleSymbol = Symbol("account");
 const [module, actions, state] = createModule(moduleSymbol)
@@ -28,6 +29,7 @@ const [module, actions, state] = createModule(moduleSymbol)
     ) => ({
       payload: { id, journal, nextActions },
     }),
+    createLedger: (ledger: LedgerCreateRequest) => ({ payload: { ledger } }),
     updateLedger: (id: number, ledger: Omit<LedgerUpdateRequest, "id">) => ({
       payload: { id, ledger },
     }),
@@ -66,6 +68,18 @@ module
         } else {
           return nextActions;
         }
+      })
+    );
+  })
+  .on(actions.createLedger, ({ ledger }) => {
+    return Rx.fromPromise(PresentationApi.createLedger(ledger)).pipe(
+      Rx.map((res) => {
+        return [
+          actions.loadLedger({
+            nendo: res.data.body.nendo,
+            ledger_cd: ledger.ledger_cd,
+          }),
+        ];
       })
     );
   })

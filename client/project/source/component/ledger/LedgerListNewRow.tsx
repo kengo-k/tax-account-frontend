@@ -1,39 +1,35 @@
 import * as React from "react";
 import { useSelector } from "typeless";
-import { useDebouncedCallback } from "use-debounce";
 import { DateTime } from "luxon";
 import Numeral from "numeral";
 import flatmap from "lodash.flatmap";
 import { useActions, actions, useState } from "@module/action";
 import { selectSaimokuMap } from "@module/selector/selectSaimokuMap";
-import { LedgerSearchResponse } from "@common/model/journal/LedgerSearchResponse";
 import {
   LedgerListInputErrorItem,
   SetLedgerListInputError,
 } from "@component/ledger/LedgerListError";
 import { Context } from "@component/Main";
 import { SaimokuMasterEntity } from "@common/model/master/SaimokuMasterEntity";
-import { LedgerUpdateRequest } from "@common/model/journal/LedgerUpdateRequest";
-import { toNumber } from "@component/ledger/LedgerList";
+import { toNumber, toRawDate } from "@component/ledger/LedgerList";
 
-export const LedgerListRow = (props: {
-  ledger: LedgerSearchResponse;
+export const LedgerListNewRow = (props: {
   error: Readonly<LedgerListInputErrorItem>;
   setError: SetLedgerListInputError;
   notifyError: () => void;
 }) => {
-  const { updateJournal, updateLedger } = useActions();
+  const { createLedger } = useActions();
   const { saimokuList } = useState();
   const saimokuMap = useSelector(selectSaimokuMap);
 
-  const [dateStr, setDate] = React.useState(props.ledger.date);
+  const [dateStr, setDate] = React.useState("");
   // prettier-ignore
-  const [kariValueStr, setKariValue] = React.useState(`${props.ledger.karikata_value}`);
+  const [kariValueStr, setKariValue] = React.useState("");
   // prettier-ignore
-  const [kasiValueStr, setKasiValue] = React.useState(`${props.ledger.kasikata_value}`);
-  const [cd, setCd] = React.useState(props.ledger.another_cd);
+  const [kasiValueStr, setKasiValue] = React.useState("");
+  const [cd, setCd] = React.useState("");
   const [cdSelectMode, setCdSelectMode] = React.useState(false);
-  const [cdSearchKey, setCdSearchKey] = React.useState(props.ledger.another_cd);
+  const [cdSearchKey, setCdSearchKey] = React.useState("");
   const [filterdSaimokuList, setFilterdSaimokuList] = React.useState(
     [] as SaimokuMasterEntity[]
   );
@@ -64,22 +60,6 @@ export const LedgerListRow = (props: {
     return ret;
   };
 
-  const updateDateDebounced = useDebouncedCallback((dateStr: string) => {
-    const date = DateTime.fromFormat(dateStr, "yyyymmdd");
-    updateJournal(
-      props.ledger.journal_id,
-      { date: dateStr },
-      reloadLedger(true)
-    );
-  }, 1500);
-
-  const updateLedgerDebounced = useDebouncedCallback(
-    (request: LedgerUpdateRequest) => {
-      updateLedger(request.id, request);
-    },
-    1500
-  );
-
   const updateDate = (dateStr: string) => {
     props.setError("date_required", { hasError: false });
     props.setError("date_format", { hasError: false });
@@ -89,17 +69,19 @@ export const LedgerListRow = (props: {
         message: "日付が未入力です",
         targetId: ["date"],
       });
-      return;
+      return false;
     }
-    const date = DateTime.fromFormat(dateStr, "yyyymmdd");
-    if (date.invalidReason == null) {
-      updateDateDebounced(dateStr);
+    const date1 = DateTime.fromFormat(dateStr, "yyyymmdd");
+    const date2 = DateTime.fromFormat(dateStr, "yyyy/mm/dd");
+    if (date1.invalidReason == null || date2.invalidReason == null) {
+      return true;
     } else {
       props.setError("date_format", {
         hasError: true,
         message: `日付が不正です: ${dateStr}`,
         targetId: ["date"],
       });
+      return false;
     }
   };
 
@@ -109,7 +91,7 @@ export const LedgerListRow = (props: {
     props.setError("kari_negative", { hasError: false });
     updateValues(valueStr, kasiRef.current!.value);
     if (isEmpty(valueStr)) {
-      return;
+      return true;
     }
     const numeral = Numeral(valueStr);
     const value = numeral.value();
@@ -119,7 +101,7 @@ export const LedgerListRow = (props: {
         message: `数値で入力してください: ${valueStr}`,
         targetId: ["karikata_value"],
       });
-      return;
+      return false;
     }
     if (value <= 0) {
       props.setError("kari_negative", {
@@ -127,15 +109,9 @@ export const LedgerListRow = (props: {
         message: `正の数値を入力してください: ${valueStr}`,
         targetId: ["karikata_value"],
       });
-      return;
+      return false;
     }
-    updateLedgerDebounced({
-      id: props.ledger.journal_id,
-      ledger_cd: context.ledgerCd,
-      other_cd: props.ledger.another_cd,
-      karikata_value: value,
-      kasikata_value: null,
-    });
+    return true;
   };
 
   // 貸方金額更新処理
@@ -144,7 +120,7 @@ export const LedgerListRow = (props: {
     props.setError("kasi_negative", { hasError: false });
     updateValues(valueStr, kariRef.current!.value);
     if (isEmpty(valueStr)) {
-      return;
+      return true;
     }
     const numeral = Numeral(valueStr);
     const value = numeral.value();
@@ -154,7 +130,7 @@ export const LedgerListRow = (props: {
         message: `数値で入力してください: ${valueStr}`,
         targetId: ["kasikata_value"],
       });
-      return;
+      return false;
     }
     if (value <= 0) {
       props.setError("kasi_negative", {
@@ -162,15 +138,9 @@ export const LedgerListRow = (props: {
         message: `正の数値を入力してください: ${valueStr}`,
         targetId: ["kasikata_value"],
       });
-      return;
+      return false;
     }
-    updateLedgerDebounced({
-      id: props.ledger.journal_id,
-      ledger_cd: context.ledgerCd,
-      other_cd: props.ledger.another_cd,
-      karikata_value: null,
-      kasikata_value: value,
-    });
+    return true;
   };
 
   // 借方・貸方関連チェック
@@ -197,30 +167,54 @@ export const LedgerListRow = (props: {
     return true;
   };
 
-  const updateCd = (other_cd: string) => {
-    updateLedgerDebounced({
-      id: props.ledger.journal_id,
-      ledger_cd: context.ledgerCd,
-      other_cd,
-      karikata_value: toNumber(kariRef.current?.value),
-      kasikata_value: toNumber(kasiRef.current?.value),
-    });
+  const updateCd = (otherCd: string) => {
+    props.setError("cd_invalid", { hasError: false });
+    props.setError("cd_required", { hasError: false });
+    if (otherCd.length === 0) {
+      props.setError("cd_required", {
+        hasError: true,
+        message: "相手科目コードが入力されていません",
+        targetId: ["another_cd"],
+      });
+      return false;
+    }
+    if (!saimokuMap.has(otherCd.toUpperCase())) {
+      props.setError("cd_invalid", {
+        hasError: true,
+        message: `相手科目コードが正しくありません: ${otherCd}`,
+        targetId: ["another_cd"],
+      });
+      return false;
+    }
+    return true;
   };
 
-  React.useEffect(() => {
-    const date = DateTime.fromFormat(dateStr, "yyyymmdd");
-    if (date.invalidReason == null) {
-      setDate(date.toFormat("yyyy/mm/dd"));
-    }
-    const kariValue = Numeral(kariValueStr);
-    if (kariValue.value() === 0) {
+  const save = () => {
+    const validateResutls = [
+      updateDate(dateStr),
+      updateKariValue(kariValueStr),
+      updateKasiValue(kasiValueStr),
+      updateCd(cdSearchKey),
+    ];
+    if (validateResutls.every((valid) => valid)) {
+      createLedger({
+        nendo: context.nendo,
+        date: toRawDate(dateStr),
+        ledger_cd: context.ledgerCd,
+        other_cd: cdSearchKey,
+        karikata_value: toNumber(kariValueStr),
+        kasikata_value: toNumber(kasiValueStr),
+        note: undefined,
+      });
+      setDate("");
+      setCd("");
+      setCdSearchKey("");
       setKariValue("");
-    }
-    const kasiValue = Numeral(kasiValueStr);
-    if (kasiValue.value() === 0) {
       setKasiValue("");
+    } else {
+      props.notifyError();
     }
-  }, []);
+  };
 
   React.useEffect(() => {
     if (cdSearchRef.current != null) {
@@ -254,7 +248,7 @@ export const LedgerListRow = (props: {
           maxLength={8}
           onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
             setDate(e.target.value);
-            updateDate(e.target.value);
+            //updateDate(e.target.value);
           }}
           onFocus={(e: React.ChangeEvent<HTMLInputElement>) => {
             const dateStr = e.target.value;
@@ -269,7 +263,11 @@ export const LedgerListRow = (props: {
             if (date.invalidReason == null) {
               setDate(date.toFormat("yyyy/mm/dd"));
             }
-            props.notifyError();
+          }}
+          onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+            if (e.key === "Enter") {
+              save();
+            }
           }}
           className={`ledgerBody-date-input ${
             props.error.date_format != null || props.error.date_required
@@ -296,7 +294,9 @@ export const LedgerListRow = (props: {
                 const otherCd = e.target.value.toUpperCase();
                 if (saimokuMap.has(otherCd)) {
                   setCd(otherCd);
-                  updateCd(otherCd);
+                } else {
+                  setCd("");
+                  setCdSearchKey("");
                 }
               }}
               onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -307,8 +307,16 @@ export const LedgerListRow = (props: {
                       filterdSaimokuList[0].saimoku_cd;
                   }
                 }
+                if (e.key === "Enter") {
+                  save();
+                }
               }}
-              className="search"
+              className={`search ${
+                props.error.cd_required != null ||
+                props.error.cd_invalid != null
+                  ? "error"
+                  : ""
+              }`}
               ref={cdSearchRef}
             />
             <select
@@ -343,11 +351,20 @@ export const LedgerListRow = (props: {
         ) : (
           <input
             type="text"
-            value={`${cd}:${saimokuMap.get(cd)?.saimoku_ryaku_name}`}
+            value={`${
+              cd.length === 0
+                ? ""
+                : `${cd}:${saimokuMap.get(cd)?.saimoku_ryaku_name}`
+            }  `}
             onFocus={(e: React.FocusEvent<HTMLInputElement>) => {
               setCdSelectMode(true);
-              setCdSearchKey(props.ledger.another_cd);
+              setCdSearchKey(cd);
             }}
+            className={`search ${
+              props.error.cd_required != null || props.error.cd_invalid != null
+                ? "error"
+                : ""
+            }`}
           />
         )}
       </td>
@@ -361,6 +378,11 @@ export const LedgerListRow = (props: {
           }}
           onBlur={(e: React.ChangeEvent<HTMLInputElement>) => {
             props.notifyError();
+          }}
+          onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+            if (e.key === "Enter") {
+              save();
+            }
           }}
           className={`num value ${
             props.error.kari_format != null ||
@@ -384,6 +406,11 @@ export const LedgerListRow = (props: {
           onBlur={(e: React.ChangeEvent<HTMLInputElement>) => {
             props.notifyError();
           }}
+          onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+            if (e.key === "Enter") {
+              save();
+            }
+          }}
           className={`num value ${
             props.error.kasi_format != null ||
             props.error.kasi_negative ||
@@ -398,13 +425,8 @@ export const LedgerListRow = (props: {
       <td className="ledgerBody-note">
         <input type="text" />
       </td>
-      <td className="ledgerBody-acc">
-        <input
-          type="text"
-          value={props.ledger.acc}
-          disabled
-          className="num readonly"
-        />
+      <td>
+        <br />
       </td>
     </tr>
   );

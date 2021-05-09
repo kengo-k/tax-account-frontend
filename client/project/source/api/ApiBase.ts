@@ -95,3 +95,22 @@ export const putWithId = <BODYPARAMS>(
     )({ id }, bodyParams);
   };
 };
+
+export const post = <BODYPARAMS>(
+  ver: number,
+  apiCategory: string,
+  path: string,
+  checkBodyParams: ((bodyParams: BODYPARAMS) => void) | undefined
+) => {
+  return async (bodyParams: BODYPARAMS) => {
+    if (checkBodyParams != null) {
+      if (bodyParams == null) {
+        throw new Error("body parameters is required");
+      }
+      checkBodyParams(bodyParams);
+    }
+    const client = getClient();
+    const apiPath = `${apiCategory}/v${ver}/${path}`;
+    return await client.post(apiPath, bodyParams);
+  };
+};
