@@ -16,20 +16,136 @@ function getClient() {
   return client;
 }
 
-export const get = <REQ>(
+const getPath = (req: any, pathWithParams: string) => {
+  let path = pathWithParams;
+  if (req != null) {
+    for (const key of Object.keys(req)) {
+      path = path.replace(`:${key}`, (req as any)[key]);
+    }
+  }
+  return path;
+};
+
+export const getWithPathParams = <PATHPARAMS>(
+  ver: number,
+  apiCategory: string,
+  pathWithParams: string,
+  checkPathParams: ((pathParams: PATHPARAMS) => void) | undefined
+) => {
+  return async (pathParams: PATHPARAMS) => {
+    if (checkPathParams != null) {
+      if (pathParams == null) {
+        throw new Error("path parameters is required");
+      }
+      checkPathParams(pathParams);
+    }
+    const path = getPath(pathParams, pathWithParams);
+    return await get(ver, apiCategory, path)();
+  };
+};
+
+export const get = (ver: number, apiCategory: string, path: string) => {
+  return async () => {
+    const client = getClient();
+    const apiPath = `${apiCategory}/v${ver}/${path}`;
+    return await client.get(apiPath);
+  };
+};
+
+export const putWithPathParams = <PATHPARAMS, BODYPARAMS>(
+  ver: number,
+  apiCategory: string,
+  pathWithParams: string,
+  checkPathParams: ((pathParams: PATHPARAMS) => void) | undefined,
+  checkBodyParams: ((bodyParams: BODYPARAMS) => void) | undefined
+) => {
+  return async (pathParams: PATHPARAMS, bodyParams: BODYPARAMS) => {
+    if (checkPathParams != null) {
+      if (pathParams == null) {
+        throw new Error("path parameters is required");
+      }
+      checkPathParams(pathParams);
+    }
+    if (checkBodyParams != null) {
+      if (bodyParams == null) {
+        throw new Error("body parameters is required");
+      }
+      checkBodyParams(bodyParams);
+    }
+    const path = getPath(pathParams, pathWithParams);
+    const client = getClient();
+    const apiPath = `${apiCategory}/v${ver}/${path}`;
+    return await client.put(apiPath, bodyParams);
+  };
+};
+
+export const deleteWithPathParams = <PATHPARAMS>(
+  ver: number,
+  apiCategory: string,
+  pathWithParams: string,
+  checkPathParams: ((pathParams: PATHPARAMS) => void) | undefined
+) => {
+  return async (pathParams: PATHPARAMS) => {
+    if (checkPathParams != null) {
+      if (pathParams == null) {
+        throw new Error("path parameters is required");
+      }
+      checkPathParams(pathParams);
+    }
+    const path = getPath(pathParams, pathWithParams);
+    const client = getClient();
+    const apiPath = `${apiCategory}/v${ver}/${path}`;
+    return await client.delete(apiPath);
+  };
+};
+
+export const putWithId = <BODYPARAMS>(
+  ver: number,
+  apiCategory: string,
+  pathWithParams: string,
+  checkBodyParams: ((bodyParams: BODYPARAMS) => void) | undefined
+) => {
+  return async (id: number, bodyParams: BODYPARAMS) => {
+    return putWithPathParams(
+      ver,
+      apiCategory,
+      pathWithParams,
+      undefined,
+      checkBodyParams
+    )({ id }, bodyParams);
+  };
+};
+
+export const deleteWithId = (
+  ver: number,
+  apiCategory: string,
+  pathWithParams: string
+) => {
+  return async (id: number) => {
+    return deleteWithPathParams(
+      ver,
+      apiCategory,
+      pathWithParams,
+      undefined
+    )({ id });
+  };
+};
+
+export const post = <BODYPARAMS>(
   ver: number,
   apiCategory: string,
   path: string,
-  handler: (req: any) => REQ
+  checkBodyParams: ((bodyParams: BODYPARAMS) => void) | undefined
 ) => {
-  return async (_req: any) => {
-    const req: REQ = handler(_req);
-    if (req == null) {
-      throw new Error();
+  return async (bodyParams: BODYPARAMS) => {
+    if (checkBodyParams != null) {
+      if (bodyParams == null) {
+        throw new Error("body parameters is required");
+      }
+      checkBodyParams(bodyParams);
     }
     const client = getClient();
     const apiPath = `${apiCategory}/v${ver}/${path}`;
-    const result = await client.get(apiPath);
-    return result;
+    return await client.post(apiPath, bodyParams);
   };
 };

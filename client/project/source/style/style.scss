@@ -1,0 +1,60 @@
+.ledgerHeader {
+  &-date {
+  }
+}
+
+.ledgerBody {
+  &-date {
+    input {
+      width: 100px;
+    }
+  }
+  .value {
+    width: 100px;
+  }
+
+  &-anotherCd {
+    width: 40px;
+    .cdSelect {
+      position: relative;
+      .search {
+        width: 100%;
+        position: absolute;
+        top: -11px;
+      }
+      .candidate {
+        position: absolute;
+        width: 100px;
+        left: 43px;
+        top: -11px;
+      }
+    }
+  }
+  &-otherCdName {
+    width: 100px;
+    input {
+      width: 100%;
+    }
+  }
+}
+
+.ledgerListError {
+  border: 1px #cccccc solid;
+  background-color: pink;
+  .ledgerListErrorItem {
+    display: inline-block;
+    margin-left: 10px;
+  }
+}
+
+.num {
+  text-align: right;
+}
+
+.readonly {
+  background-color: #cccccc;
+}
+
+.error {
+  background-color: pink;
+}
