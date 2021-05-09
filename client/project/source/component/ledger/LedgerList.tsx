@@ -38,7 +38,9 @@ export const LedgerList = (props: { nendo: string; ledgerCd: string }) => {
           <thead className="ledgerHeader">
             <tr>
               <th className="ledgerHeader-date">登録日</th>
-              <th className="ledgerHeader-anotherCd">相手科目</th>
+              <th className="ledgerHeader-anotherCd" colSpan={2}>
+                相手科目
+              </th>
               <th className="ledgerHeader-karikataValue">金額(借方)</th>
               <th className="ledgerHeader-kasikataValue">金額(貸方)</th>
               <th className="ledgerHeader-note">備考</th>

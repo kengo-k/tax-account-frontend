@@ -32,6 +32,9 @@ export const LedgerListRow = (props: {
   // prettier-ignore
   const [kasiValueStr, setKasiValue] = React.useState(`${props.ledger.kasikata_value}`);
   const [cd, setCd] = React.useState(props.ledger.another_cd);
+  const [cdName, setCdName] = React.useState(
+    saimokuMap.get(props.ledger.another_cd)?.saimoku_ryaku_name
+  );
   const [cdSelectMode, setCdSelectMode] = React.useState(false);
   const [cdSearchKey, setCdSearchKey] = React.useState(props.ledger.another_cd);
   const [filterdSaimokuList, setFilterdSaimokuList] = React.useState(
@@ -350,6 +353,9 @@ export const LedgerListRow = (props: {
             }}
           />
         )}
+      </td>
+      <td>
+        <input type="text" value={cdName} disabled readOnly />
       </td>
       <td className="ledgerBody-karikataValue">
         <input
