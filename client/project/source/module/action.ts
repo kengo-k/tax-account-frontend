@@ -29,6 +29,9 @@ const [module, actions, state] = createModule(moduleSymbol)
     ) => ({
       payload: { id, journal, nextActions },
     }),
+    deleteJournal: (id: number, nextActions?: any[] | (() => any[])) => ({
+      payload: { id, nextActions },
+    }),
     createLedger: (ledger: LedgerCreateRequest) => ({ payload: { ledger } }),
     updateLedger: (id: number, ledger: Omit<LedgerUpdateRequest, "id">) => ({
       payload: { id, ledger },
@@ -59,6 +62,20 @@ module
   })
   .on(actions.updateJournal, ({ id, journal, nextActions }) => {
     return Rx.fromPromise(PresentationApi.updateJournal(id, journal)).pipe(
+      Rx.map(() => {
+        if (nextActions == null) {
+          return [];
+        }
+        if (typeof nextActions === "function") {
+          return nextActions();
+        } else {
+          return nextActions;
+        }
+      })
+    );
+  })
+  .on(actions.deleteJournal, ({ id, nextActions }) => {
+    return Rx.fromPromise(PresentationApi.deleteJournal(id)).pipe(
       Rx.map(() => {
         if (nextActions == null) {
           return [];

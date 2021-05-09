@@ -47,6 +47,9 @@ export const LedgerList = (props: { nendo: string; ledgerCd: string }) => {
               <th className="ledgerHeader-kasikataValue">金額(貸方)</th>
               <th className="ledgerHeader-note">備考</th>
               <th className="ledgerHeader-acc">累計</th>
+              <th className="ledgerHeader-delete">
+                <br />
+              </th>
             </tr>
           </thead>
           <tbody className="ledgerBody">

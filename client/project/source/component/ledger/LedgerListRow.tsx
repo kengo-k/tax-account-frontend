@@ -23,7 +23,7 @@ export const LedgerListRow = (props: {
   setError: SetLedgerListInputError;
   notifyError: () => void;
 }) => {
-  const { updateJournal, updateLedger } = useActions();
+  const { updateJournal, deleteJournal, updateLedger } = useActions();
   const { saimokuList } = useState();
   const saimokuMap = useSelector(selectSaimokuMap);
 
@@ -399,10 +399,19 @@ export const LedgerListRow = (props: {
       <td className="ledgerBody-acc">
         <input
           type="text"
-          value={props.ledger.acc}
+          value={Numeral(props.ledger.acc).format("0,0")}
           disabled
           className="num readonly"
         />
+      </td>
+      <td>
+        <button
+          onClick={() => {
+            deleteJournal(props.ledger.journal_id, reloadLedger(false));
+          }}
+        >
+          削除
+        </button>
       </td>
     </tr>
   );

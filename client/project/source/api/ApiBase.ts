@@ -79,6 +79,26 @@ export const putWithPathParams = <PATHPARAMS, BODYPARAMS>(
   };
 };
 
+export const deleteWithPathParams = <PATHPARAMS>(
+  ver: number,
+  apiCategory: string,
+  pathWithParams: string,
+  checkPathParams: ((pathParams: PATHPARAMS) => void) | undefined
+) => {
+  return async (pathParams: PATHPARAMS) => {
+    if (checkPathParams != null) {
+      if (pathParams == null) {
+        throw new Error("path parameters is required");
+      }
+      checkPathParams(pathParams);
+    }
+    const path = getPath(pathParams, pathWithParams);
+    const client = getClient();
+    const apiPath = `${apiCategory}/v${ver}/${path}`;
+    return await client.delete(apiPath);
+  };
+};
+
 export const putWithId = <BODYPARAMS>(
   ver: number,
   apiCategory: string,
@@ -93,6 +113,21 @@ export const putWithId = <BODYPARAMS>(
       undefined,
       checkBodyParams
     )({ id }, bodyParams);
+  };
+};
+
+export const deleteWithId = (
+  ver: number,
+  apiCategory: string,
+  pathWithParams: string
+) => {
+  return async (id: number) => {
+    return deleteWithPathParams(
+      ver,
+      apiCategory,
+      pathWithParams,
+      undefined
+    )({ id });
   };
 };
 
