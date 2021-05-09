@@ -10,6 +10,7 @@ import { LedgerSearchResponse } from "@common/model/journal/LedgerSearchResponse
 import {
   LedgerListInputErrorItem,
   SetLedgerListInputError,
+  hasError,
 } from "@component/ledger/LedgerListError";
 import { Context } from "@component/Main";
 import { SaimokuMasterEntity } from "@common/model/master/SaimokuMasterEntity";
@@ -32,15 +33,11 @@ export const LedgerListRow = (props: {
   // prettier-ignore
   const [kasiValueStr, setKasiValue] = React.useState(`${props.ledger.kasikata_value}`);
   const [cd, setCd] = React.useState(props.ledger.another_cd);
-  const [cdName, setCdName] = React.useState(
-    saimokuMap.get(props.ledger.another_cd)?.saimoku_ryaku_name
-  );
+  const [cdName, setCdName] = React.useState("");
   const [cdSelectMode, setCdSelectMode] = React.useState(false);
-  const [cdSearchKey, setCdSearchKey] = React.useState(props.ledger.another_cd);
   const [filterdSaimokuList, setFilterdSaimokuList] = React.useState(
     [] as SaimokuMasterEntity[]
   );
-  let cdCandidateUseMode = false;
 
   const kariRef = React.createRef<HTMLInputElement>();
   const kasiRef = React.createRef<HTMLInputElement>();
@@ -110,34 +107,39 @@ export const LedgerListRow = (props: {
   const updateKariValue = (valueStr: string) => {
     props.setError("kari_format", { hasError: false });
     props.setError("kari_negative", { hasError: false });
-    updateValues(valueStr, kasiRef.current!.value);
-    if (isEmpty(valueStr)) {
+    const ret = updateValues(valueStr, kasiRef.current!.value);
+    if (!ret) {
       return;
     }
-    const numeral = Numeral(valueStr);
-    const value = numeral.value();
-    if (value == null) {
-      props.setError("kari_format", {
-        hasError: true,
-        message: `数値で入力してください: ${valueStr}`,
-        targetId: ["karikata_value"],
-      });
-      return;
+    if (!isEmpty(valueStr)) {
+      const numeral = Numeral(valueStr);
+      const value = numeral.value();
+      if (value == null) {
+        props.setError("kari_format", {
+          hasError: true,
+          message: `数値で入力してください: ${valueStr}`,
+          targetId: ["karikata_value"],
+        });
+        return;
+      }
+      if (value <= 0) {
+        props.setError("kari_negative", {
+          hasError: true,
+          message: `正の数値を入力してください: ${valueStr}`,
+          targetId: ["karikata_value"],
+        });
+        return;
+      }
     }
-    if (value <= 0) {
-      props.setError("kari_negative", {
-        hasError: true,
-        message: `正の数値を入力してください: ${valueStr}`,
-        targetId: ["karikata_value"],
-      });
+    if (hasError(props.error, "kasi_format", "kasi_negative")) {
       return;
     }
     updateLedgerDebounced({
       id: props.ledger.journal_id,
       ledger_cd: context.ledgerCd,
       other_cd: props.ledger.another_cd,
-      karikata_value: value,
-      kasikata_value: null,
+      karikata_value: toNumber(valueStr),
+      kasikata_value: toNumber(kasiRef.current?.value),
     });
   };
 
@@ -145,34 +147,39 @@ export const LedgerListRow = (props: {
   const updateKasiValue = (valueStr: string) => {
     props.setError("kasi_format", { hasError: false });
     props.setError("kasi_negative", { hasError: false });
-    updateValues(valueStr, kariRef.current!.value);
-    if (isEmpty(valueStr)) {
+    const ret = updateValues(valueStr, kariRef.current!.value);
+    if (!ret) {
       return;
     }
-    const numeral = Numeral(valueStr);
-    const value = numeral.value();
-    if (value == null) {
-      props.setError("kasi_format", {
-        hasError: true,
-        message: `数値で入力してください: ${valueStr}`,
-        targetId: ["kasikata_value"],
-      });
-      return;
+    if (!isEmpty(valueStr)) {
+      const numeral = Numeral(valueStr);
+      const value = numeral.value();
+      if (value == null) {
+        props.setError("kasi_format", {
+          hasError: true,
+          message: `数値で入力してください: ${valueStr}`,
+          targetId: ["kasikata_value"],
+        });
+        return;
+      }
+      if (value <= 0) {
+        props.setError("kasi_negative", {
+          hasError: true,
+          message: `正の数値を入力してください: ${valueStr}`,
+          targetId: ["kasikata_value"],
+        });
+        return;
+      }
     }
-    if (value <= 0) {
-      props.setError("kasi_negative", {
-        hasError: true,
-        message: `正の数値を入力してください: ${valueStr}`,
-        targetId: ["kasikata_value"],
-      });
+    if (hasError(props.error, "kari_format", "kari_negative")) {
       return;
     }
     updateLedgerDebounced({
       id: props.ledger.journal_id,
       ledger_cd: context.ledgerCd,
       other_cd: props.ledger.another_cd,
-      karikata_value: null,
-      kasikata_value: value,
+      karikata_value: toNumber(kariRef.current?.value),
+      kasikata_value: toNumber(valueStr),
     });
   };
 
@@ -200,11 +207,44 @@ export const LedgerListRow = (props: {
     return true;
   };
 
-  const updateCd = (other_cd: string) => {
+  const updateCd = (otherCd: string) => {
+    props.setError("cd_required", { hasError: false });
+    props.setError("cd_invalid", { hasError: false });
+    if (otherCd.length === 0) {
+      props.setError("cd_required", {
+        hasError: true,
+        message: "相手科目コードが入力されていません",
+        targetId: ["another_cd"],
+      });
+      return;
+    }
+    if (
+      !saimokuMap.has(otherCd.toUpperCase()) &&
+      filterdSaimokuList.length !== 1
+    ) {
+      props.setError("cd_invalid", {
+        hasError: true,
+        message: `相手科目コードが正しくありません: ${otherCd}`,
+        targetId: ["another_cd"],
+      });
+      return;
+    }
+    let paramCd = otherCd;
+    if (saimokuMap.has(otherCd)) {
+      setCd(otherCd);
+      setCdName(saimokuMap.get(otherCd)!.saimoku_ryaku_name);
+    } else if (filterdSaimokuList.length === 1) {
+      setCd(filterdSaimokuList[0].saimoku_cd);
+      setCdName(filterdSaimokuList[0].saimoku_ryaku_name);
+      paramCd = filterdSaimokuList[0].saimoku_cd;
+    } else {
+      setCd("");
+      return;
+    }
     updateLedgerDebounced({
       id: props.ledger.journal_id,
       ledger_cd: context.ledgerCd,
-      other_cd,
+      other_cd: paramCd,
       karikata_value: toNumber(kariRef.current?.value),
       kasikata_value: toNumber(kasiRef.current?.value),
     });
@@ -226,27 +266,24 @@ export const LedgerListRow = (props: {
   }, []);
 
   React.useEffect(() => {
-    if (cdSearchRef.current != null) {
-      cdSearchRef.current.focus();
-      //cdSearchRef.current.select();
+    const saimoku = saimokuMap.get(props.ledger.another_cd);
+    if (saimoku != null) {
+      setCdName(saimoku.saimoku_ryaku_name);
     }
-  }, [cdSearchRef]);
+  }, [saimokuMap]);
 
   React.useEffect(() => {
     const filterdSaimokuList = flatmap(saimokuList, (s) => {
-      if (s.saimoku_cd.toLowerCase().startsWith(cdSearchKey.toLowerCase())) {
+      if (s.saimoku_cd.toLowerCase().startsWith(cd.toLowerCase())) {
         return [s];
       }
-      if (
-        s.saimoku_kana_name.toLowerCase().indexOf(cdSearchKey.toLowerCase()) >
-        -1
-      ) {
+      if (s.saimoku_kana_name.toLowerCase().indexOf(cd.toLowerCase()) > -1) {
         return [s];
       }
       return [];
     });
     setFilterdSaimokuList(filterdSaimokuList);
-  }, [cdSearchKey, saimokuList]);
+  }, [cd, saimokuList]);
 
   return (
     <tr>
@@ -282,56 +319,33 @@ export const LedgerListRow = (props: {
         />
       </td>
       <td className="ledgerBody-anotherCd">
-        {cdSelectMode ? (
-          <div className="cdSelect">
-            <input
-              type="text"
-              value={cdSearchKey}
-              onChange={(e: React.FocusEvent<HTMLInputElement>) => {
-                setCdSearchKey(e.target.value);
-              }}
-              onBlur={(e: React.FocusEvent<HTMLInputElement>) => {
-                setTimeout(() => {
-                  if (!cdCandidateUseMode) {
-                    setCdSelectMode(false);
-                  }
-                }, 1);
-                const otherCd = e.target.value.toUpperCase();
-                if (saimokuMap.has(otherCd)) {
-                  setCd(otherCd);
-                  updateCd(otherCd);
-                }
-              }}
-              onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
-                if (e.key === "ArrowDown") {
-                  if (cdCandidateRef.current != null) {
-                    cdCandidateRef.current.focus();
-                    cdCandidateRef.current.value =
-                      filterdSaimokuList[0].saimoku_cd;
-                  }
-                }
-              }}
-              className="search"
-              ref={cdSearchRef}
-            />
+        <div className="cdSelect">
+          <input
+            type="text"
+            value={cd}
+            onChange={(e: React.FocusEvent<HTMLInputElement>) => {
+              setCd(e.target.value);
+            }}
+            onFocus={() => {
+              setCdSelectMode(true);
+            }}
+            onBlur={(e: React.FocusEvent<HTMLInputElement>) => {
+              setCdSelectMode(false);
+              updateCd(e.target.value);
+              props.notifyError();
+            }}
+            className={`search ${
+              props.error.cd_required != null || props.error.cd_invalid != null
+                ? "error"
+                : ""
+            }`}
+            ref={cdSearchRef}
+          />
+          {cdSelectMode ? (
             <select
-              size={7}
+              size={5}
               className="candidate"
               tabIndex={-1}
-              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
-                if (cdSearchRef.current != null) {
-                  cdSearchRef.current.value = e.target.value;
-                }
-              }}
-              onFocus={(e: React.FocusEvent<HTMLSelectElement>) => {
-                cdCandidateUseMode = true;
-              }}
-              onBlur={(e: React.FocusEvent<HTMLSelectElement>) => {
-                cdCandidateUseMode = false;
-                setCdSelectMode(false);
-                setCd(e.target.value);
-                updateCd(e.target.value);
-              }}
               ref={cdCandidateRef}
             >
               {filterdSaimokuList.map((s) => {
@@ -342,19 +356,12 @@ export const LedgerListRow = (props: {
                 );
               })}
             </select>
-          </div>
-        ) : (
-          <input
-            type="text"
-            value={`${cd}:${saimokuMap.get(cd)?.saimoku_ryaku_name}`}
-            onFocus={(e: React.FocusEvent<HTMLInputElement>) => {
-              setCdSelectMode(true);
-              setCdSearchKey(props.ledger.another_cd);
-            }}
-          />
-        )}
+          ) : (
+            <></>
+          )}
+        </div>
       </td>
-      <td>
+      <td className="ledgerBody-otherCdName">
         <input type="text" value={cdName} disabled readOnly />
       </td>
       <td className="ledgerBody-karikataValue">

@@ -170,8 +170,8 @@ export const LedgerListNewRow = (props: {
   };
 
   const updateCd = (otherCd: string) => {
-    props.setError("cd_invalid", { hasError: false });
     props.setError("cd_required", { hasError: false });
+    props.setError("cd_invalid", { hasError: false });
     if (otherCd.length === 0) {
       props.setError("cd_required", {
         hasError: true,
@@ -210,6 +210,7 @@ export const LedgerListNewRow = (props: {
       });
       setDate("");
       setCd("");
+      setCdName("");
       setKariValue("");
       setKasiValue("");
     } else {
@@ -267,65 +268,62 @@ export const LedgerListNewRow = (props: {
         />
       </td>
       <td className="ledgerBody-anotherCd">
-        {
-          <div className="cdSelect">
-            <input
-              type="text"
-              value={cd}
-              onChange={(e: React.FocusEvent<HTMLInputElement>) => {
-                setCd(e.target.value);
-              }}
-              onFocus={(e: React.FocusEvent<HTMLInputElement>) => {
-                setCdSelectMode(true);
-              }}
-              onBlur={(e: React.FocusEvent<HTMLInputElement>) => {
-                setCdSelectMode(false);
-                const otherCd = e.target.value.toUpperCase();
-                if (saimokuMap.has(otherCd)) {
-                  setCd(otherCd);
-                  setCdName(saimokuMap.get(otherCd)!.saimoku_ryaku_name);
-                } else if (filterdSaimokuList.length === 1) {
-                  setCd(filterdSaimokuList[0].saimoku_cd);
-                  setCdName(filterdSaimokuList[0].saimoku_ryaku_name);
-                } else {
-                  setCd("");
-                }
-              }}
-              onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
-                if (e.key === "Enter") {
-                  save();
-                }
-              }}
-              className={`search ${
-                props.error.cd_required != null ||
-                props.error.cd_invalid != null
-                  ? "error"
-                  : ""
-              }`}
-              ref={cdSearchRef}
-            />
-            {cdSelectMode ? (
-              <select
-                size={5}
-                className="candidate"
-                tabIndex={-1}
-                ref={cdCandidateRef}
-              >
-                {filterdSaimokuList.map((s) => {
-                  return (
-                    <option key={s.saimoku_cd} value={s.saimoku_cd}>
-                      {`${s.saimoku_cd}:${s.saimoku_ryaku_name}`}
-                    </option>
-                  );
-                })}
-              </select>
-            ) : (
-              <></>
-            )}
-          </div>
-        }
+        <div className="cdSelect">
+          <input
+            type="text"
+            value={cd}
+            onChange={(e: React.FocusEvent<HTMLInputElement>) => {
+              setCd(e.target.value);
+            }}
+            onFocus={(e: React.FocusEvent<HTMLInputElement>) => {
+              setCdSelectMode(true);
+            }}
+            onBlur={(e: React.FocusEvent<HTMLInputElement>) => {
+              setCdSelectMode(false);
+              const otherCd = e.target.value.toUpperCase();
+              if (saimokuMap.has(otherCd)) {
+                setCd(otherCd);
+                setCdName(saimokuMap.get(otherCd)!.saimoku_ryaku_name);
+              } else if (filterdSaimokuList.length === 1) {
+                setCd(filterdSaimokuList[0].saimoku_cd);
+                setCdName(filterdSaimokuList[0].saimoku_ryaku_name);
+              } else {
+                setCd("");
+              }
+            }}
+            onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+              if (e.key === "Enter") {
+                save();
+              }
+            }}
+            className={`search ${
+              props.error.cd_required != null || props.error.cd_invalid != null
+                ? "error"
+                : ""
+            }`}
+            ref={cdSearchRef}
+          />
+          {cdSelectMode ? (
+            <select
+              size={5}
+              className="candidate"
+              tabIndex={-1}
+              ref={cdCandidateRef}
+            >
+              {filterdSaimokuList.map((s) => {
+                return (
+                  <option key={s.saimoku_cd} value={s.saimoku_cd}>
+                    {`${s.saimoku_cd}:${s.saimoku_ryaku_name}`}
+                  </option>
+                );
+              })}
+            </select>
+          ) : (
+            <></>
+          )}
+        </div>
       </td>
-      <td>
+      <td className="ledgerBody-otherCdName">
         <input type="text" value={cdName} disabled readOnly />
       </td>
       <td className="ledgerBody-karikataValue">

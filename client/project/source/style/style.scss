@@ -14,18 +14,26 @@
   }
 
   &-anotherCd {
+    width: 40px;
     .cdSelect {
       position: relative;
       .search {
+        width: 100%;
         position: absolute;
         top: -11px;
       }
       .candidate {
         position: absolute;
         width: 100px;
-        left: 175px;
+        left: 43px;
         top: -11px;
       }
+    }
+  }
+  &-otherCdName {
+    width: 100px;
+    input {
+      width: 100%;
     }
   }
 }

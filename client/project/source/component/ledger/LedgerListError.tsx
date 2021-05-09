@@ -31,6 +31,20 @@ export interface LedgerListInputErrorItem {
   value_neither?: Omit<Invalid, "hasError">;
 }
 
+export const hasError = (
+  errorItem: LedgerListInputErrorItem,
+  ...keys: Array<keyof LedgerListInputErrorItem>
+) => {
+  let has = false;
+  for (const key of keys) {
+    if (key in errorItem) {
+      has = true;
+      break;
+    }
+  }
+  return has;
+};
+
 // key: journal_id: 行を特定する情報
 // value: [項目ID, エラーメッセージ]
 export type LedgerListInputErrors = Map<string, LedgerListInputErrorItem>;
