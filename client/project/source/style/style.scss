@@ -1,9 +1,44 @@
-.ledgerHeader {
+.mainHeader {
+  display: inline-block;
+  border: 1px solid #cccccc;
+  border-radius: 5px;
+  background-color: #eeeeee;
+  padding: 15px;
+  label {
+    margin-right: 20px;
+  }
+  &-warning {
+    font-weight: bold;
+    color: #ff2266;
+  }
+}
+
+.journalBody {
+  td,
+  th {
+    background-color: #cfd1e6;
+    padding: 3px;
+  }
   &-date {
+    width: 100px;
+  }
+  &-cd {
+    width: 150px;
+  }
+  &-value {
+    width: 100px;
+  }
+  &-note {
+    min-width: 100px;
   }
 }
 
 .ledgerBody {
+  td,
+  th {
+    background-color: #cfd1e6;
+    padding: 3px;
+  }
   &-date {
     input {
       width: 100px;

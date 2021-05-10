@@ -3,7 +3,6 @@ import { useSelector } from "typeless";
 import { useDebouncedCallback } from "use-debounce";
 import { DateTime } from "luxon";
 import Numeral from "numeral";
-import flatmap from "lodash.flatmap";
 import { useActions, actions, useState } from "@module/action";
 import { selectSaimokuMap } from "@module/selector/selectSaimokuMap";
 import { LedgerSearchResponse } from "@common/model/journal/LedgerSearchResponse";
@@ -64,7 +63,6 @@ export const LedgerListRow = (props: {
   };
 
   const updateDateDebounced = useDebouncedCallback((dateStr: string) => {
-    const date = DateTime.fromFormat(dateStr, "yyyymmdd");
     updateJournal(
       props.ledger.journal_id,
       { date: dateStr },

@@ -91,6 +91,7 @@ export const Main = () => {
                   })}
                 >
                   <Header />
+                  <hr />
                   <JournalList nendo={p.nendo} />
                 </Context.Provider>
               );
@@ -116,7 +117,6 @@ export const Main = () => {
                   })}
                 >
                   <Header />
-                  台帳コードを選択してください
                 </Context.Provider>
               );
             }}
@@ -142,6 +142,7 @@ export const Main = () => {
                   })}
                 >
                   <Header />
+                  <hr />
                   <LedgerList nendo={p.nendo} ledgerCd={p.ledgerCd} />
                 </Context.Provider>
               );
