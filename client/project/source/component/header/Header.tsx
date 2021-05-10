@@ -4,33 +4,53 @@ import { Context } from "@component/Main";
 
 export const Header = () => {
   // load initial data
-  const { loadInit } = useActions();
-  React.useEffect(() => {
-    loadInit();
-  }, []);
-
+  const { loadInit, setTmpLedgerCd } = useActions();
   const context = React.useContext(Context);
   const state = useState();
 
-  const createUrl = (props: { nendo?: string; ledgerCd?: string }): string => {
+  const [journalChecked, setJournalChecked] = React.useState(
+    context.showJournal
+  );
+  const [ledgerChecked, setLedgerChecked] = React.useState(
+    context.ledgerCd != null
+  );
+  const [ledgerCd, setLedgerCd] = React.useState(context.ledgerCd);
+  const journalRef = React.createRef<HTMLInputElement>();
+  const ledgerRef = React.createRef<HTMLInputElement>();
+  const ledgerCdSelectRef = React.createRef<HTMLSelectElement>();
+
+  const createUrl = (props: {
+    nendo: string | undefined;
+    showJournal: boolean;
+    showLedger: boolean;
+    ledgerCd: string | undefined;
+  }): string => {
     const url = [];
     if (props.nendo === "") {
       return "/";
     }
-    if (props.nendo == null) {
-      props.nendo = context.nendo;
+    url.push(props.nendo);
+    if (props.showJournal) {
+      url.push("journal");
     }
-    if (props.ledgerCd == null) {
-      props.ledgerCd = context.ledgerCd;
-    }
-    if (props.nendo != null) {
-      url.push(props.nendo);
+    if (props.showLedger) {
+      url.push("ledger");
     }
     if (props.ledgerCd != null) {
       url.push(props.ledgerCd);
     }
     return `/${url.join("/")}`;
   };
+
+  React.useEffect(() => {
+    loadInit();
+  }, []);
+
+  React.useEffect(() => {
+    if (context.ledgerCd != null) {
+      setTmpLedgerCd(context.ledgerCd);
+    }
+  }, [context.ledgerCd]);
 
   return (
     <div>
@@ -40,7 +60,14 @@ export const Header = () => {
           <select
             value={context.nendo}
             onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
-              context.history.push(createUrl({ nendo: e.target.value }));
+              context.history.push(
+                createUrl({
+                  nendo: e.target.value,
+                  ledgerCd: undefined,
+                  showJournal: false,
+                  showLedger: false,
+                })
+              );
             }}
           >
             <option></option>
@@ -52,18 +79,104 @@ export const Header = () => {
       </div>
       <div>
         <label>
-          <input type="radio" name="displayType" id="journal" value="journal" />
+          <input
+            type="checkbox"
+            name="displayType"
+            id="journal"
+            value="journal"
+            checked={journalChecked}
+            onClick={() => {
+              if (journalRef.current?.checked) {
+                setJournalChecked(true);
+                setLedgerChecked(false);
+                context.history.push(
+                  createUrl({
+                    nendo: context.nendo,
+                    ledgerCd: undefined,
+                    showJournal: true,
+                    showLedger: false,
+                  })
+                );
+              } else {
+                setJournalChecked(false);
+                context.history.push(
+                  createUrl({
+                    nendo: context.nendo,
+                    ledgerCd: undefined,
+                    showJournal: false,
+                    showLedger: false,
+                  })
+                );
+              }
+            }}
+            ref={journalRef}
+            disabled={context.nendo == null}
+          />
           仕訳帳
         </label>
         <label>
-          <input type="radio" name="displayType" id="ledger" value="ledger" />
+          <input
+            type="checkbox"
+            name="displayType"
+            id="ledger"
+            value="ledger"
+            checked={ledgerChecked}
+            onClick={() => {
+              if (ledgerRef.current?.checked) {
+                setLedgerChecked(true);
+                setJournalChecked(false);
+                if (ledgerCd != null) {
+                  context.history.push(
+                    createUrl({
+                      nendo: context.nendo,
+                      ledgerCd: ledgerCd,
+                      showJournal: false,
+                      showLedger: true,
+                    })
+                  );
+                } else {
+                  context.history.push(
+                    createUrl({
+                      nendo: context.nendo,
+                      ledgerCd: undefined,
+                      showJournal: false,
+                      showLedger: true,
+                    })
+                  );
+                }
+              } else {
+                setLedgerChecked(false);
+                context.history.push(
+                  createUrl({
+                    nendo: context.nendo,
+                    ledgerCd: undefined,
+                    showJournal: false,
+                    showLedger: false,
+                  })
+                );
+              }
+            }}
+            ref={ledgerRef}
+            disabled={context.nendo == null}
+          />
           出納帳
         </label>
         <select
-          value={context.ledgerCd}
+          value={state.tmpLedgerCd}
           onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
-            context.history.push(createUrl({ ledgerCd: e.target.value }));
+            setLedgerCd(e.target.value);
+            setTmpLedgerCd(e.target.value);
+            context.history.push(
+              createUrl({
+                nendo: context.nendo,
+                ledgerCd: e.target.value,
+                showJournal: false,
+                showLedger: true,
+              })
+            );
           }}
+          disabled={!ledgerChecked}
+          ref={ledgerCdSelectRef}
         >
           <option></option>
           {state.saimokuList.map((s) => {
