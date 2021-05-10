@@ -31,7 +31,6 @@ export const LedgerList = (props: { nendo: string; ledgerCd: string }) => {
 
   return (
     <div>
-      <hr />
       <LedgerListError errors={errors} />
       <div className="ledgerList">
         <table>

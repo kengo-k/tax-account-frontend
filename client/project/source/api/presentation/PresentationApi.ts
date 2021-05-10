@@ -11,6 +11,12 @@ import { LedgerUpdateRequest } from "@common/model/journal/LedgerUpdateRequest";
 
 export const PresentationApi = {
   selectInit: get(1, "papi", "init"),
+  selectJournal: getWithPathParams<{ nendo: string }>(
+    1,
+    "api",
+    "journals/:nendo",
+    undefined
+  ),
   selectLedger: getWithPathParams<{
     nendo: string;
     ledger_cd: string;

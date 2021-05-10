@@ -6,6 +6,7 @@ import { InitSearchResponse } from "@common/model/presentation/InitSearchRespons
 import { LedgerSearchRequest } from "@common/model/journal/LedgerSearchRequest";
 import { LedgerSearchResponse } from "@common/model/journal/LedgerSearchResponse";
 import { JournalEntity } from "@common/model/journal/JournalEntity";
+import { JournalSearchRequest } from "@common/model/journal/JournalSearchRequest";
 import { LedgerUpdateRequest } from "@common/model/journal/LedgerUpdateRequest";
 import { LedgerCreateRequest } from "@common/model/journal/LedgerCreateRequest";
 
@@ -21,6 +22,12 @@ const [module, actions, state] = createModule(moduleSymbol)
     }),
     setLedger: (ledgerList: LedgerSearchResponse[]) => ({
       payload: { ledgerList },
+    }),
+    loadJournals: (journalSearchRequest: JournalSearchRequest) => ({
+      payload: { journalSearchRequest },
+    }),
+    setJournals: (journalList: JournalEntity[]) => ({
+      payload: { journalList },
     }),
     updateJournal: (
       id: number,
@@ -58,6 +65,15 @@ module
     ).pipe(
       Rx.map((res) => {
         return [actions.setLedger(res.data.body)];
+      })
+    );
+  })
+  .on(actions.loadJournals, ({ journalSearchRequest }) => {
+    return Rx.fromPromise(
+      PresentationApi.selectJournal({ nendo: journalSearchRequest.nendo })
+    ).pipe(
+      Rx.map((res) => {
+        return [actions.setJournals(res.data.body)];
       })
     );
   })
@@ -120,6 +136,9 @@ module
     state.nendoList = initData.nendo_list;
     state.kamokuList = initData.kamoku_list;
     state.saimokuList = initData.saimoku_list;
+  })
+  .on(actions.setJournals, (state, { journalList }) => {
+    state.journalList = journalList;
   })
   .on(actions.setLedger, (state, { ledgerList }) => {
     state.ledgerList = ledgerList;
