@@ -2,7 +2,6 @@ import * as React from "react";
 import flatmap from "lodash.flatmap";
 import { DateTime } from "luxon";
 import { useActions, useState } from "@module/action";
-import { Header } from "@component/header/Header";
 import { LedgerListRow } from "@component/ledger/LedgerListRow";
 import { LedgerListNewRow } from "@component/ledger/LedgerListNewRow";
 import {
@@ -32,7 +31,6 @@ export const LedgerList = (props: { nendo: string; ledgerCd: string }) => {
 
   return (
     <div>
-      <Header />
       <hr />
       <LedgerListError errors={errors} />
       <div className="ledgerList">

@@ -8,6 +8,7 @@ export interface State {
   kamokuList: KamokuMasterEntity[];
   saimokuList: SaimokuMasterEntity[];
   ledgerList: LedgerSearchResponse[];
+  tmpLedgerCd: string;
 }
 
 export const getInitialState = (): State => {
@@ -16,5 +17,6 @@ export const getInitialState = (): State => {
     kamokuList: [],
     saimokuList: [],
     ledgerList: [],
+    tmpLedgerCd: "",
   };
 };

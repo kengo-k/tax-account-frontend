@@ -36,6 +36,7 @@ const [module, actions, state] = createModule(moduleSymbol)
     updateLedger: (id: number, ledger: Omit<LedgerUpdateRequest, "id">) => ({
       payload: { id, ledger },
     }),
+    setTmpLedgerCd: (tmpLedgerCd: string) => ({ payload: { tmpLedgerCd } }),
   })
   .withState<State>();
 
@@ -122,6 +123,9 @@ module
   })
   .on(actions.setLedger, (state, { ledgerList }) => {
     state.ledgerList = ledgerList;
+  })
+  .on(actions.setTmpLedgerCd, (state, { tmpLedgerCd }) => {
+    state.tmpLedgerCd = tmpLedgerCd;
   });
 
 export type Actions = typeof actions;
