@@ -45,9 +45,16 @@ export const getWithPathParams = <PATHPARAMS>(
 };
 
 export const get = (ver: number, apiCategory: string, path: string) => {
-  return async () => {
+  return async (queryParams?: object) => {
     const client = getClient();
-    const apiPath = `${apiCategory}/v${ver}/${path}`;
+    let apiPath = `${apiCategory}/v${ver}/${path}`;
+    const query = [];
+    if (queryParams != null) {
+      for (const key of Object.keys(queryParams)) {
+        query.push(`${key}=${(queryParams as any)[key]}`);
+      }
+      apiPath = `${apiPath}${query.length > 0 ? `?${query.join("&")}` : ""}`;
+    }
     return await client.get(apiPath);
   };
 };
