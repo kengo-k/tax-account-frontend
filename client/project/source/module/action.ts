@@ -9,6 +9,8 @@ import { JournalEntity } from "@common/model/journal/JournalEntity";
 import { JournalSearchRequest } from "@common/model/journal/JournalSearchRequest";
 import { LedgerUpdateRequest } from "@common/model/journal/LedgerUpdateRequest";
 import { LedgerCreateRequest } from "@common/model/journal/LedgerCreateRequest";
+import { SummaryRequest } from "@common/model/presentation/SummaryRequest";
+import { SummaryResponse } from "@common/model/presentation/SummaryResponse";
 
 const moduleSymbol = Symbol("account");
 const [module, actions, state] = createModule(moduleSymbol)
@@ -44,6 +46,12 @@ const [module, actions, state] = createModule(moduleSymbol)
       payload: { id, ledger },
     }),
     setTmpLedgerCd: (tmpLedgerCd: string) => ({ payload: { tmpLedgerCd } }),
+    loadSummary: (summaryRequest: SummaryRequest) => ({
+      payload: { summaryRequest },
+    }),
+    setSummary: (summary: SummaryResponse) => ({
+      payload: { summary },
+    }),
   })
   .withState<State>();
 
@@ -128,6 +136,13 @@ module
         ];
       })
     );
+  })
+  .on(actions.loadSummary, ({ summaryRequest }) => {
+    return Rx.fromPromise(PresentationApi.selectSummary(summaryRequest)).pipe(
+      Rx.map((res) => {
+        return [actions.setSummary(res.data.body)];
+      })
+    );
   });
 
 module
@@ -145,6 +160,9 @@ module
   })
   .on(actions.setTmpLedgerCd, (state, { tmpLedgerCd }) => {
     state.tmpLedgerCd = tmpLedgerCd;
+  })
+  .on(actions.setSummary, (state, { summary }) => {
+    state.summary = summary;
   });
 
 export type Actions = typeof actions;
