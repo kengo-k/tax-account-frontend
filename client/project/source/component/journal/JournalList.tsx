@@ -5,6 +5,7 @@ import Numeral from "numeral";
 import { useActions, useState } from "@module/action";
 import { selectSaimokuMap } from "@module/selector/selectSaimokuMap";
 import { Context } from "@component/Main";
+import { JournalSearchRequest } from "@common/model/journal/JournalSearchRequest";
 
 export const JournalList = (props: { nendo: string }) => {
   const { loadJournals } = useActions();
@@ -12,7 +13,7 @@ export const JournalList = (props: { nendo: string }) => {
   const saimokuMap = useSelector(selectSaimokuMap);
   const context = React.useContext(Context);
   React.useEffect(() => {
-    loadJournals({ nendo: context.nendo });
+    loadJournals(new JournalSearchRequest({ nendo: context.nendo }));
   }, []);
   return (
     <div>
@@ -24,6 +25,7 @@ export const JournalList = (props: { nendo: string }) => {
           <th>貸方科目</th>
           <th>貸方金額</th>
           <th>備考</th>
+          <th>更新日時</th>
         </thead>
         <tbody className="journalBody">
           {journalList.map((j) => {
@@ -49,6 +51,13 @@ export const JournalList = (props: { nendo: string }) => {
                   {Numeral(j.kasikata_value).format("0,0")}
                 </td>
                 <td className="journalBody-note">{j.note}</td>
+                <td>
+                  {j.updated_at == null
+                    ? ""
+                    : DateTime.fromISO(j.updated_at).toFormat(
+                        "yyyy/MM/dd HH:mm:ss"
+                      )}
+                </td>
               </tr>
             );
           })}
