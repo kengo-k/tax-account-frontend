@@ -5,7 +5,10 @@ import Numeral from "numeral";
 import { useActions, useState } from "@module/action";
 import { selectSaimokuMap } from "@module/selector/selectSaimokuMap";
 import { Context } from "@component/Main";
-import { JournalSearchRequest } from "@common/model/journal/JournalSearchRequest";
+import {
+  IJournalSearchRequest,
+  JournalSearchRequest,
+} from "@common/model/journal/JournalSearchRequest";
 
 export const JournalList = (props: { nendo: string }) => {
   const { loadJournals } = useActions();
@@ -13,8 +16,18 @@ export const JournalList = (props: { nendo: string }) => {
   const saimokuMap = useSelector(selectSaimokuMap);
   const context = React.useContext(Context);
   React.useEffect(() => {
-    loadJournals(new JournalSearchRequest({ nendo: context.nendo }));
-  }, []);
+    const request: Partial<IJournalSearchRequest> = { nendo: context.nendo };
+    if (context.journalsOrder != null) {
+      if (context.journalsOrder === "1") {
+        request.latest_order = true;
+      } else if (context.journalsOrder === "2") {
+        request.largest_order = true;
+      } else if (context.journalsOrder === "3") {
+        request.largest_order = false;
+      }
+    }
+    loadJournals(new JournalSearchRequest(request));
+  }, [context.journalsOrder]);
   return (
     <div>
       <table>

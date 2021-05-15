@@ -21,7 +21,7 @@ export const LedgerList = (props: { nendo: string; ledgerCd: string }) => {
   );
 
   React.useEffect(() => {
-    loadLedger({ nendo: props.nendo, ledger_cd: props.ledgerCd });
+    loadLedger({ nendo: props.nendo, ledger_cd: props.ledgerCd, month: "-1" });
   }, [props]);
 
   const ledgerListRows: (

@@ -16,6 +16,9 @@ export const Header = () => {
     context.ledgerCd != null
   );
   const [ledgerCd, setLedgerCd] = React.useState(context.ledgerCd);
+  const [journalsOrder, setJournalsOrder] = React.useState(
+    undefined as string | undefined
+  );
   const journalRef = React.createRef<HTMLInputElement>();
   const ledgerRef = React.createRef<HTMLInputElement>();
   const ledgerCdSelectRef = React.createRef<HTMLSelectElement>();
@@ -25,6 +28,7 @@ export const Header = () => {
     showJournal: boolean;
     showLedger: boolean;
     ledgerCd: string | undefined;
+    journalsOrder: string | undefined;
   }): string => {
     const url = [];
     if (props.nendo === "") {
@@ -40,7 +44,14 @@ export const Header = () => {
     if (props.ledgerCd != null) {
       url.push(props.ledgerCd);
     }
-    return `/${url.join("/")}`;
+    const query = [];
+    if (props.journalsOrder != null) {
+      query.push(`journals_order=${props.journalsOrder}`);
+    }
+    const ret = `/${url.join("/")}${
+      query.length === 0 ? "" : `?${query.join("&")}`
+    }`;
+    return ret;
   };
 
   React.useEffect(() => {
@@ -59,6 +70,12 @@ export const Header = () => {
     }
   }, [context.nendo]);
 
+  React.useEffect(() => {
+    if (context.journalsOrder != null) {
+      setJournalsOrder(context.journalsOrder);
+    }
+  }, [context.journalsOrder]);
+
   return (
     <>
       <div className="mainHeaderRoot">
@@ -75,6 +92,7 @@ export const Header = () => {
                     ledgerCd: undefined,
                     showJournal: false,
                     showLedger: false,
+                    journalsOrder: undefined,
                   })
                 );
               }}
@@ -102,6 +120,7 @@ export const Header = () => {
                       ledgerCd: undefined,
                       showJournal: true,
                       showLedger: false,
+                      journalsOrder: undefined,
                     })
                   );
                 } else {
@@ -112,6 +131,7 @@ export const Header = () => {
                       ledgerCd: undefined,
                       showJournal: false,
                       showLedger: false,
+                      journalsOrder: undefined,
                     })
                   );
                 }
@@ -139,6 +159,7 @@ export const Header = () => {
                         ledgerCd: ledgerCd,
                         showJournal: false,
                         showLedger: true,
+                        journalsOrder: undefined,
                       })
                     );
                   } else {
@@ -148,6 +169,7 @@ export const Header = () => {
                         ledgerCd: undefined,
                         showJournal: false,
                         showLedger: true,
+                        journalsOrder: undefined,
                       })
                     );
                   }
@@ -159,6 +181,7 @@ export const Header = () => {
                       ledgerCd: undefined,
                       showJournal: false,
                       showLedger: false,
+                      journalsOrder: undefined,
                     })
                   );
                 }
@@ -179,6 +202,7 @@ export const Header = () => {
                   ledgerCd: e.target.value,
                   showJournal: false,
                   showLedger: true,
+                  journalsOrder: undefined,
                 })
               );
             }}
@@ -201,6 +225,36 @@ export const Header = () => {
               <></>
             )}
           </div>
+          {context.showJournal ? (
+            <div className="journalSearchOption">
+              <hr />
+              表示順:
+              <select
+                value={journalsOrder}
+                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
+                  const value =
+                    e.target.value === "" ? undefined : e.target.value;
+                  setJournalsOrder(value);
+                  context.history.push(
+                    createUrl({
+                      nendo: context.nendo,
+                      ledgerCd: undefined,
+                      showJournal: true,
+                      showLedger: false,
+                      journalsOrder: value,
+                    })
+                  );
+                }}
+              >
+                <option></option>
+                <option value="1">更新日/降順</option>
+                <option value="2">金額/降順</option>
+                <option value="3">金額/昇順</option>
+              </select>
+            </div>
+          ) : (
+            <></>
+          )}
         </div>
       </div>
       <div className="summaryHeader">

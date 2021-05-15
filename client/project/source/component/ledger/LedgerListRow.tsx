@@ -57,6 +57,7 @@ export const LedgerListRow = (props: {
       actions.loadLedger({
         nendo: context.nendo,
         ledger_cd: context.ledgerCd,
+        month: "-1",
       })
     );
     return ret;

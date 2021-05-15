@@ -10,13 +10,29 @@ import { Header } from "@component/header/Header";
 import { JournalList } from "@component/journal/JournalList";
 import { LedgerList } from "@component/ledger/LedgerList";
 
+const useQuery = () => {
+  let query = location.search;
+  const queryMap = new Map<string, string>();
+  if (query.length <= 1) {
+    return queryMap;
+  }
+  query = query.substr(1);
+  const queries = query.split("&");
+  for (const q of queries) {
+    const qs = q.split("=");
+    queryMap.set(qs[0], qs[1]);
+  }
+  return queryMap;
+};
+
 const getInitialContextValue = () => {
   return {
-    history: (undefined as any) as History,
-    nendo: (undefined as any) as string,
+    history: undefined as any as History,
+    nendo: undefined as any as string,
     showJournal: false,
     showLedger: false,
-    ledgerCd: (undefined as any) as string,
+    ledgerCd: undefined as any as string,
+    journalsOrder: undefined,
   };
 };
 
@@ -26,6 +42,7 @@ export const Context = React.createContext<{
   showJournal: boolean;
   showLedger: boolean;
   ledgerCd: string;
+  journalsOrder: string | undefined;
 }>(getInitialContextValue());
 
 export const Main = () => {
@@ -77,17 +94,18 @@ export const Main = () => {
             render={(
               routeProps: RouteComponentProps<{
                 nendo: string;
-                ledgerCd: string;
               }>
             ) => {
               const p = routeProps.match.params;
               const contextValue = getInitialContextValue();
+              const query = useQuery();
               return (
                 <Context.Provider
                   value={Object.assign(contextValue, {
                     history: routeProps.history,
                     nendo: p.nendo,
                     showJournal: true,
+                    journalsOrder: query.get("journals_order"),
                   })}
                 >
                   <Header />
@@ -103,7 +121,6 @@ export const Main = () => {
             render={(
               routeProps: RouteComponentProps<{
                 nendo: string;
-                ledgerCd: string;
               }>
             ) => {
               const p = routeProps.match.params;

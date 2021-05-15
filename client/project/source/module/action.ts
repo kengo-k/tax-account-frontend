@@ -78,7 +78,10 @@ module
   })
   .on(actions.loadJournals, ({ journalSearchRequest }) => {
     return Rx.fromPromise(
-      PresentationApi.selectJournal({ nendo: journalSearchRequest.nendo })
+      PresentationApi.selectJournal(journalSearchRequest, {
+        latest_order: journalSearchRequest.latest_order,
+        largest_order: journalSearchRequest.largest_order,
+      })
     ).pipe(
       Rx.map((res) => {
         return [actions.setJournals(res.data.body)];
@@ -120,6 +123,7 @@ module
           actions.loadLedger({
             nendo: res.data.body.nendo,
             ledger_cd: ledger.ledger_cd,
+            month: "-1",
           }),
         ];
       })
@@ -132,6 +136,7 @@ module
           actions.loadLedger({
             nendo: res.data.body.nendo,
             ledger_cd: ledger.ledger_cd,
+            month: "-1",
           }),
         ];
       })
