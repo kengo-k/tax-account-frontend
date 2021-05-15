@@ -26,20 +26,36 @@ const getPath = (req: any, pathWithParams: string) => {
   return path;
 };
 
+const appendQuery = (basePath: string, queryParams?: object) => {
+  if (queryParams == null) {
+    return basePath;
+  }
+  const query = [];
+  for (const key of Object.keys(queryParams)) {
+    const value = (queryParams as any)[key];
+    if (value != null) {
+      query.push(`${key}=${value}`);
+    }
+  }
+  const path = `${basePath}${query.length > 0 ? `?${query.join("&")}` : ""}`;
+  return path;
+};
+
 export const getWithPathParams = <PATHPARAMS>(
   ver: number,
   apiCategory: string,
   pathWithParams: string,
   checkPathParams: ((pathParams: PATHPARAMS) => void) | undefined
 ) => {
-  return async (pathParams: PATHPARAMS) => {
+  return async (pathParams: PATHPARAMS, queryParams?: object) => {
     if (checkPathParams != null) {
       if (pathParams == null) {
         throw new Error("path parameters is required");
       }
       checkPathParams(pathParams);
     }
-    const path = getPath(pathParams, pathWithParams);
+    let path = getPath(pathParams, pathWithParams);
+    path = appendQuery(path, queryParams);
     return await get(ver, apiCategory, path)();
   };
 };
@@ -48,13 +64,7 @@ export const get = (ver: number, apiCategory: string, path: string) => {
   return async (queryParams?: object) => {
     const client = getClient();
     let apiPath = `${apiCategory}/v${ver}/${path}`;
-    const query = [];
-    if (queryParams != null) {
-      for (const key of Object.keys(queryParams)) {
-        query.push(`${key}=${(queryParams as any)[key]}`);
-      }
-      apiPath = `${apiPath}${query.length > 0 ? `?${query.join("&")}` : ""}`;
-    }
+    apiPath = appendQuery(apiPath, queryParams);
     return await client.get(apiPath);
   };
 };
