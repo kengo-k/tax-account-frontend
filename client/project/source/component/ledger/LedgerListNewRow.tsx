@@ -395,6 +395,21 @@ export const LedgerListNewRow = (props: {
             setKariValue(e.target.value);
             updateKariValue(e.target.value);
           }}
+          onFocus={(e: React.ChangeEvent<HTMLInputElement>) => {
+            const valueStr = e.target.value;
+            if (valueStr.length === 0) {
+              return;
+            }
+            const value = Numeral(valueStr);
+            const rawValue = `${value.value()}`;
+            setKariValue(rawValue);
+          }}
+          onBlur={(e: React.ChangeEvent<HTMLInputElement>) => {
+            const valueStr = e.target.value;
+            const value = Numeral(valueStr);
+            const fmtValue = value.value() == null ? "" : value.format("0,0");
+            setKariValue(fmtValue);
+          }}
           onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
             if (e.key === "Enter") {
               save();
@@ -418,6 +433,21 @@ export const LedgerListNewRow = (props: {
           onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
             setKasiValue(e.target.value);
             updateKasiValue(e.target.value);
+          }}
+          onFocus={(e: React.ChangeEvent<HTMLInputElement>) => {
+            const valueStr = e.target.value;
+            if (valueStr.length === 0) {
+              return;
+            }
+            const value = Numeral(valueStr);
+            const rawValue = `${value.value()}`;
+            setKasiValue(rawValue);
+          }}
+          onBlur={(e: React.ChangeEvent<HTMLInputElement>) => {
+            const valueStr = e.target.value;
+            const value = Numeral(valueStr);
+            const fmtValue = value.value() == null ? "" : value.format("0,0");
+            setKasiValue(fmtValue);
           }}
           onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
             if (e.key === "Enter") {

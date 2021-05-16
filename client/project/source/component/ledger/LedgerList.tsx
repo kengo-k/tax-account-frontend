@@ -1,6 +1,7 @@
 import * as React from "react";
 import flatmap from "lodash.flatmap";
 import { DateTime } from "luxon";
+import Numeral from "numeral";
 import { useActions, useState, actions } from "@module/action";
 import { LedgerListRow } from "@component/ledger/LedgerListRow";
 import { LedgerListNewRow } from "@component/ledger/LedgerListNewRow";
@@ -116,7 +117,7 @@ export const toNumber = (s: string | undefined) => {
   if (s.length === 0) {
     return null;
   }
-  return Number(s);
+  return Numeral(s).value();
 };
 
 export const toRawDate = (dateStr: string) => {
