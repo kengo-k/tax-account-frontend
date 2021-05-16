@@ -33,6 +33,7 @@ export const LedgerListRow = (props: {
   const nendoMap = useSelector(selectNendoMap);
 
   const [dateStr, setDate] = React.useState(props.ledger.date);
+  const [dateStrDD, setDateDD] = React.useState(props.ledger.date.substr(6, 2));
   // prettier-ignore
   const [kariValueStr, setKariValue] = React.useState(`${props.ledger.karikata_value}`);
   // prettier-ignore
@@ -304,38 +305,70 @@ export const LedgerListRow = (props: {
   return (
     <tr>
       <td className="ledgerBody-date">
-        <input
-          type="text"
-          value={dateStr}
-          maxLength={8}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-            setDate(e.target.value);
-            updateDate(e.target.value);
-          }}
-          onFocus={(e: React.ChangeEvent<HTMLInputElement>) => {
-            const dateStr = e.target.value;
-            const date = DateTime.fromFormat(dateStr, "yyyy/mm/dd");
-            if (date.invalidReason == null) {
-              setDate(date.toFormat("yyyymmdd"));
-            }
-          }}
-          onBlur={(e: React.ChangeEvent<HTMLInputElement>) => {
-            const dateStr = e.target.value;
-            const date = DateTime.fromFormat(dateStr, "yyyymmdd");
-            if (date.invalidReason == null) {
-              setDate(date.toFormat("yyyy/mm/dd"));
-            }
-            props.notifyError();
-          }}
-          className={`ledgerBody-date-input ${
-            props.error.date_format != null ||
-            props.error.date_required ||
-            props.error.date_month_range ||
-            props.error.date_nendo_range
-              ? "error"
-              : ""
-          }`}
-        />
+        {context.ledgerMonth != null ? (
+          <>
+            <input
+              type="text"
+              value={`${context.nendo}/${context.ledgerMonth}/`}
+              maxLength={6}
+              readOnly
+              disabled
+              className={`ledgerBody-date-yyyymm`}
+            />
+            <input
+              type="text"
+              value={dateStrDD}
+              maxLength={2}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                setDateDD(e.target.value);
+                updateDate(
+                  `${context.nendo}${context.ledgerMonth}${e.target.value}`
+                );
+              }}
+              onBlur={() => {
+                props.notifyError();
+              }}
+              className={`ledgerBody-date-dd ${
+                props.error.date_format != null || props.error.date_required
+                  ? "error"
+                  : ""
+              }`}
+            />
+          </>
+        ) : (
+          <input
+            type="text"
+            value={dateStr}
+            maxLength={8}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+              setDate(e.target.value);
+              updateDate(e.target.value);
+            }}
+            onFocus={(e: React.ChangeEvent<HTMLInputElement>) => {
+              const dateStr = e.target.value;
+              const date = DateTime.fromFormat(dateStr, "yyyy/mm/dd");
+              if (date.invalidReason == null) {
+                setDate(date.toFormat("yyyymmdd"));
+              }
+            }}
+            onBlur={(e: React.ChangeEvent<HTMLInputElement>) => {
+              const dateStr = e.target.value;
+              const date = DateTime.fromFormat(dateStr, "yyyymmdd");
+              if (date.invalidReason == null) {
+                setDate(date.toFormat("yyyy/mm/dd"));
+              }
+              props.notifyError();
+            }}
+            className={`ledgerBody-date-input ${
+              props.error.date_format != null ||
+              props.error.date_required ||
+              props.error.date_month_range ||
+              props.error.date_nendo_range
+                ? "error"
+                : ""
+            }`}
+          />
+        )}
       </td>
       <td className="ledgerBody-anotherCd">
         <div className="cdSelect">

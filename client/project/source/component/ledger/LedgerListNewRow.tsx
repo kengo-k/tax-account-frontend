@@ -29,6 +29,7 @@ export const LedgerListNewRow = (props: {
   const nendoMap = useSelector(selectNendoMap);
 
   const [dateStr, setDate] = React.useState("");
+  const [dateStrDD, setDateDD] = React.useState("");
   const [kariValueStr, setKariValue] = React.useState("");
   const [kasiValueStr, setKasiValue] = React.useState("");
   const [cd, setCd] = React.useState("");
@@ -222,8 +223,14 @@ export const LedgerListNewRow = (props: {
   };
 
   const save = () => {
+    let date;
+    if (context.ledgerMonth != null) {
+      date = `${context.nendo}${context.ledgerMonth}${dateStrDD}`;
+    } else {
+      date = dateStr;
+    }
     const validateResutls = [
-      updateDate(dateStr),
+      updateDate(date),
       updateKariValue(kariValueStr),
       updateKasiValue(kasiValueStr),
       updateCd(cd),
@@ -232,7 +239,7 @@ export const LedgerListNewRow = (props: {
       createLedger(
         {
           nendo: context.nendo,
-          date: toRawDate(dateStr),
+          date: toRawDate(date),
           ledger_cd: context.ledgerCd,
           other_cd: cd,
           karikata_value: toNumber(kariValueStr),
@@ -242,6 +249,7 @@ export const LedgerListNewRow = (props: {
         reloadLedger(false)
       );
       setDate("");
+      setDateDD("");
       setCd("");
       setCdName("");
       setKariValue("");
@@ -259,41 +267,72 @@ export const LedgerListNewRow = (props: {
   return (
     <tr>
       <td className="ledgerBody-date">
-        <input
-          type="text"
-          value={dateStr}
-          maxLength={8}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-            setDate(e.target.value);
-          }}
-          onFocus={(e: React.ChangeEvent<HTMLInputElement>) => {
-            const dateStr = e.target.value;
-            const date = DateTime.fromFormat(dateStr, "yyyy/mm/dd");
-            if (date.invalidReason == null) {
-              setDate(date.toFormat("yyyymmdd"));
-            }
-          }}
-          onBlur={(e: React.ChangeEvent<HTMLInputElement>) => {
-            const dateStr = e.target.value;
-            const date = DateTime.fromFormat(dateStr, "yyyymmdd");
-            if (date.invalidReason == null) {
-              setDate(date.toFormat("yyyy/mm/dd"));
-            }
-          }}
-          onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
-            if (e.key === "Enter") {
-              save();
-            }
-          }}
-          className={`ledgerBody-date-input ${
-            props.error.date_format != null ||
-            props.error.date_required ||
-            props.error.date_month_range ||
-            props.error.date_nendo_range
-              ? "error"
-              : ""
-          }`}
-        />
+        {context.ledgerMonth != null ? (
+          <>
+            <input
+              type="text"
+              value={`${context.nendo}/${context.ledgerMonth}/`}
+              maxLength={6}
+              readOnly
+              disabled
+              className={`ledgerBody-date-yyyymm`}
+            />
+            <input
+              type="text"
+              value={dateStrDD}
+              maxLength={2}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                setDateDD(e.target.value);
+              }}
+              onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+                if (e.key === "Enter") {
+                  save();
+                }
+              }}
+              className={`ledgerBody-date-dd ${
+                props.error.date_format != null || props.error.date_required
+                  ? "error"
+                  : ""
+              }`}
+            />
+          </>
+        ) : (
+          <input
+            type="text"
+            value={dateStr}
+            maxLength={8}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+              setDate(e.target.value);
+            }}
+            onFocus={(e: React.ChangeEvent<HTMLInputElement>) => {
+              const dateStr = e.target.value;
+              const date = DateTime.fromFormat(dateStr, "yyyy/mm/dd");
+              if (date.invalidReason == null) {
+                setDate(date.toFormat("yyyymmdd"));
+              }
+            }}
+            onBlur={(e: React.ChangeEvent<HTMLInputElement>) => {
+              const dateStr = e.target.value;
+              const date = DateTime.fromFormat(dateStr, "yyyymmdd");
+              if (date.invalidReason == null) {
+                setDate(date.toFormat("yyyy/mm/dd"));
+              }
+            }}
+            onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+              if (e.key === "Enter") {
+                save();
+              }
+            }}
+            className={`ledgerBody-date-input ${
+              props.error.date_format != null ||
+              props.error.date_required ||
+              props.error.date_month_range ||
+              props.error.date_nendo_range
+                ? "error"
+                : ""
+            }`}
+          />
+        )}
       </td>
       <td className="ledgerBody-anotherCd">
         <div className="cdSelect">

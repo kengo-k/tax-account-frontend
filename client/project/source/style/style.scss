@@ -79,8 +79,14 @@
     padding: 3px;
   }
   &-date {
-    input {
-      width: 100px;
+    &-input {
+      width: 85px;
+    }
+    &-yyyymm {
+      width: 60px;
+    }
+    &-dd {
+      width: 25px;
     }
   }
   .value {
