@@ -2,9 +2,9 @@ import * as React from "react";
 import { useSelector } from "typeless";
 import { DateTime } from "luxon";
 import Numeral from "numeral";
-import flatmap from "lodash.flatmap";
-import { useActions, actions, useState } from "@module/action";
+import { useActions, useState } from "@module/action";
 import { selectSaimokuMap } from "@module/selector/selectSaimokuMap";
+import { selectNendoMap } from "@module/selector/selectNendoMap";
 import {
   LedgerListInputErrorItem,
   SetLedgerListInputError,
@@ -15,6 +15,7 @@ import {
   toNumber,
   toRawDate,
   filterSaimokuList,
+  createReloadLedger,
 } from "@component/ledger/LedgerList";
 
 export const LedgerListNewRow = (props: {
@@ -25,6 +26,7 @@ export const LedgerListNewRow = (props: {
   const { createLedger } = useActions();
   const { saimokuList } = useState();
   const saimokuMap = useSelector(selectSaimokuMap);
+  const nendoMap = useSelector(selectNendoMap);
 
   const [dateStr, setDate] = React.useState("");
   const [kariValueStr, setKariValue] = React.useState("");
@@ -40,10 +42,13 @@ export const LedgerListNewRow = (props: {
   const kasiRef = React.createRef<HTMLInputElement>();
 
   const context = React.useContext(Context);
+  const reloadLedger = createReloadLedger(context);
 
   const updateDate = (dateStr: string) => {
     props.setError("date_required", { hasError: false });
     props.setError("date_format", { hasError: false });
+    props.setError("date_nendo_range", { hasError: false });
+    props.setError("date_month_range", { hasError: false });
     if (dateStr == null || dateStr.length === 0) {
       props.setError("date_required", {
         hasError: true,
@@ -56,9 +61,7 @@ export const LedgerListNewRow = (props: {
     // 二通りのフォーマットでチェックしどちらか片方がOKの場合に更新する
     const date1 = DateTime.fromFormat(dateStr, "yyyymmdd");
     const date2 = DateTime.fromFormat(dateStr, "yyyy/mm/dd");
-    if (date1.invalidReason == null || date2.invalidReason == null) {
-      return true;
-    } else {
+    if (!(date1.invalidReason == null || date2.invalidReason == null)) {
       props.setError("date_format", {
         hasError: true,
         message: `日付が不正です: ${dateStr}`,
@@ -66,6 +69,46 @@ export const LedgerListNewRow = (props: {
       });
       return false;
     }
+
+    const rawDate = toRawDate(dateStr);
+    const nendoMaster = nendoMap.get(context.nendo);
+    const isDateInNendoRange = (d: string) => {
+      if (nendoMaster == null) {
+        return false;
+      }
+      if (!(d >= nendoMaster.start_date && d <= nendoMaster.end_date)) {
+        return false;
+      }
+      return true;
+    };
+    if (!isDateInNendoRange(rawDate)) {
+      props.setError("date_nendo_range", {
+        hasError: true,
+        message: `対象年度内の日付で入力してください: ${DateTime.fromFormat(
+          rawDate,
+          "yyyymmdd"
+        ).toFormat("yyyy/mm/dd")}`,
+        targetId: ["date"],
+      });
+      return false;
+    }
+
+    if (
+      context.ledgerMonth != null &&
+      rawDate.substr(4, 2) !== context.ledgerMonth
+    ) {
+      props.setError("date_month_range", {
+        hasError: true,
+        message: `対象月内の日付で入力してください: ${DateTime.fromFormat(
+          rawDate,
+          "yyyymmdd"
+        ).toFormat("yyyy/mm/dd")}`,
+        targetId: ["date"],
+      });
+      return false;
+    }
+
+    return true;
   };
 
   // 借方金額更新処理
@@ -186,15 +229,18 @@ export const LedgerListNewRow = (props: {
       updateCd(cd),
     ];
     if (validateResutls.every((valid) => valid)) {
-      createLedger({
-        nendo: context.nendo,
-        date: toRawDate(dateStr),
-        ledger_cd: context.ledgerCd,
-        other_cd: cd,
-        karikata_value: toNumber(kariValueStr),
-        kasikata_value: toNumber(kasiValueStr),
-        note: undefined,
-      });
+      createLedger(
+        {
+          nendo: context.nendo,
+          date: toRawDate(dateStr),
+          ledger_cd: context.ledgerCd,
+          other_cd: cd,
+          karikata_value: toNumber(kariValueStr),
+          kasikata_value: toNumber(kasiValueStr),
+          note: undefined,
+        },
+        reloadLedger(false)
+      );
       setDate("");
       setCd("");
       setCdName("");
@@ -240,7 +286,10 @@ export const LedgerListNewRow = (props: {
             }
           }}
           className={`ledgerBody-date-input ${
-            props.error.date_format != null || props.error.date_required
+            props.error.date_format != null ||
+            props.error.date_required ||
+            props.error.date_month_range ||
+            props.error.date_nendo_range
               ? "error"
               : ""
           }`}

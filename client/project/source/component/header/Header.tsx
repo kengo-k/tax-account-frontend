@@ -19,6 +19,10 @@ export const Header = () => {
   const [journalsOrder, setJournalsOrder] = React.useState(
     undefined as string | undefined
   );
+  const [ledgerMonth, setLedgerMonth] = React.useState(
+    undefined as string | undefined
+  );
+
   const journalRef = React.createRef<HTMLInputElement>();
   const ledgerRef = React.createRef<HTMLInputElement>();
   const ledgerCdSelectRef = React.createRef<HTMLSelectElement>();
@@ -29,6 +33,7 @@ export const Header = () => {
     showLedger: boolean;
     ledgerCd: string | undefined;
     journalsOrder: string | undefined;
+    ledgerMonth: string | undefined;
   }): string => {
     const url = [];
     if (props.nendo === "") {
@@ -47,6 +52,9 @@ export const Header = () => {
     const query = [];
     if (props.journalsOrder != null) {
       query.push(`journals_order=${props.journalsOrder}`);
+    }
+    if (props.ledgerMonth != null) {
+      query.push(`month=${props.ledgerMonth}`);
     }
     const ret = `/${url.join("/")}${
       query.length === 0 ? "" : `?${query.join("&")}`
@@ -76,6 +84,10 @@ export const Header = () => {
     }
   }, [context.journalsOrder]);
 
+  React.useEffect(() => {
+    setLedgerMonth(context.ledgerMonth);
+  }, [context.ledgerMonth]);
+
   return (
     <>
       <div className="mainHeaderRoot">
@@ -89,10 +101,11 @@ export const Header = () => {
                 context.history.push(
                   createUrl({
                     nendo: e.target.value,
-                    ledgerCd: undefined,
-                    showJournal: false,
-                    showLedger: false,
-                    journalsOrder: undefined,
+                    ledgerCd: context.ledgerCd,
+                    showJournal: context.showJournal,
+                    showLedger: context.showLedger,
+                    journalsOrder: context.journalsOrder,
+                    ledgerMonth: context.ledgerMonth,
                   })
                 );
               }}
@@ -121,6 +134,7 @@ export const Header = () => {
                       showJournal: true,
                       showLedger: false,
                       journalsOrder: undefined,
+                      ledgerMonth: undefined,
                     })
                   );
                 } else {
@@ -132,6 +146,7 @@ export const Header = () => {
                       showJournal: false,
                       showLedger: false,
                       journalsOrder: undefined,
+                      ledgerMonth: undefined,
                     })
                   );
                 }
@@ -160,6 +175,7 @@ export const Header = () => {
                         showJournal: false,
                         showLedger: true,
                         journalsOrder: undefined,
+                        ledgerMonth: undefined,
                       })
                     );
                   } else {
@@ -170,6 +186,7 @@ export const Header = () => {
                         showJournal: false,
                         showLedger: true,
                         journalsOrder: undefined,
+                        ledgerMonth: undefined,
                       })
                     );
                   }
@@ -182,6 +199,7 @@ export const Header = () => {
                       showJournal: false,
                       showLedger: false,
                       journalsOrder: undefined,
+                      ledgerMonth: undefined,
                     })
                   );
                 }
@@ -203,6 +221,7 @@ export const Header = () => {
                   showJournal: false,
                   showLedger: true,
                   journalsOrder: undefined,
+                  ledgerMonth: undefined,
                 })
               );
             }}
@@ -218,13 +237,48 @@ export const Header = () => {
               );
             })}
           </select>
-          <div className="mainHeader-warning">
-            {context.showLedger && context.ledgerCd == null ? (
-              <span>台帳コードを選択してください</span>
-            ) : (
-              <></>
-            )}
-          </div>
+          {context.showLedger ? (
+            <div className="ledgerSearchOption">
+              <hr />
+              {context.showLedger && context.ledgerCd == null ? (
+                <span className="warning">台帳コードを選択してください</span>
+              ) : (
+                <></>
+              )}
+              {context.showLedger && context.ledgerCd != null ? (
+                <>
+                  対象月:
+                  <select
+                    value={ledgerMonth == null ? "" : ledgerMonth}
+                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
+                      const value =
+                        e.target.value === "" ? undefined : e.target.value;
+                      setLedgerMonth(value);
+                      context.history.push(
+                        createUrl({
+                          nendo: context.nendo,
+                          ledgerCd: context.ledgerCd,
+                          showJournal: false,
+                          showLedger: true,
+                          journalsOrder: undefined,
+                          ledgerMonth: value,
+                        })
+                      );
+                    }}
+                  >
+                    {["", 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((m) => {
+                      const value = m !== "" ? Numeral(m).format("00") : "";
+                      return <option value={value}>{value}</option>;
+                    })}
+                  </select>
+                </>
+              ) : (
+                <></>
+              )}
+            </div>
+          ) : (
+            <></>
+          )}
           {context.showJournal ? (
             <div className="journalSearchOption">
               <hr />
@@ -242,6 +296,7 @@ export const Header = () => {
                       showJournal: true,
                       showLedger: false,
                       journalsOrder: value,
+                      ledgerMonth: undefined,
                     })
                   );
                 }}

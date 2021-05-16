@@ -15,8 +15,9 @@ export const JournalList = (props: { nendo: string }) => {
   const { journalList } = useState();
   const saimokuMap = useSelector(selectSaimokuMap);
   const context = React.useContext(Context);
+
   React.useEffect(() => {
-    const request: Partial<IJournalSearchRequest> = { nendo: context.nendo };
+    const request: Partial<IJournalSearchRequest> = { nendo: props.nendo };
     if (context.journalsOrder != null) {
       if (context.journalsOrder === "1") {
         request.latest_order = true;
@@ -27,7 +28,7 @@ export const JournalList = (props: { nendo: string }) => {
       }
     }
     loadJournals(new JournalSearchRequest(request));
-  }, [context.journalsOrder]);
+  }, [props.nendo, context.journalsOrder]);
   return (
     <div>
       <table>

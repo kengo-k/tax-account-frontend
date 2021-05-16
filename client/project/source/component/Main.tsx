@@ -33,17 +33,21 @@ const getInitialContextValue = () => {
     showLedger: false,
     ledgerCd: undefined as any as string,
     journalsOrder: undefined,
+    ledgerMonth: undefined,
   };
 };
 
-export const Context = React.createContext<{
+export interface IContext {
   history: History;
   nendo: string;
   showJournal: boolean;
   showLedger: boolean;
   ledgerCd: string;
   journalsOrder: string | undefined;
-}>(getInitialContextValue());
+  ledgerMonth: string | undefined;
+}
+
+export const Context = React.createContext<IContext>(getInitialContextValue());
 
 export const Main = () => {
   return (
@@ -149,13 +153,15 @@ export const Main = () => {
             ) => {
               const p = routeProps.match.params;
               const contextValue = getInitialContextValue();
+              const query = useQuery();
               return (
                 <Context.Provider
                   value={Object.assign(contextValue, {
                     history: routeProps.history,
                     nendo: p.nendo,
                     ledgerCd: p.ledgerCd,
-                    showJournal: false,
+                    showLedger: true,
+                    ledgerMonth: query.get("month"),
                   })}
                 >
                   <Header />
