@@ -5,7 +5,7 @@ import { Context } from "@component/Main";
 
 export const Header = () => {
   // load initial data
-  const { loadInit, loadSummary, setTmpLedgerCd } = useActions();
+  const { loadInit, loadSummary, setSummary, setTmpLedgerCd } = useActions();
   const context = React.useContext(Context);
   const state = useState();
 
@@ -75,6 +75,8 @@ export const Header = () => {
   React.useEffect(() => {
     if (context.nendo != null) {
       loadSummary({ nendo: context.nendo });
+    } else {
+      setSummary({ sales: 0, expenses: 0, tax: undefined });
     }
   }, [context.nendo]);
 
