@@ -2,9 +2,9 @@ import * as React from "react";
 import { useSelector } from "typeless";
 import { DateTime } from "luxon";
 import Numeral from "numeral";
-import flatmap from "lodash.flatmap";
-import { useActions, actions, useState } from "@module/action";
+import { useActions, useState } from "@module/action";
 import { selectSaimokuMap } from "@module/selector/selectSaimokuMap";
+import { selectNendoMap } from "@module/selector/selectNendoMap";
 import {
   LedgerListInputErrorItem,
   SetLedgerListInputError,
@@ -15,6 +15,7 @@ import {
   toNumber,
   toRawDate,
   filterSaimokuList,
+  createReloadLedger,
 } from "@component/ledger/LedgerList";
 
 export const LedgerListNewRow = (props: {
@@ -25,8 +26,10 @@ export const LedgerListNewRow = (props: {
   const { createLedger } = useActions();
   const { saimokuList } = useState();
   const saimokuMap = useSelector(selectSaimokuMap);
+  const nendoMap = useSelector(selectNendoMap);
 
   const [dateStr, setDate] = React.useState("");
+  const [dateStrDD, setDateDD] = React.useState("");
   const [kariValueStr, setKariValue] = React.useState("");
   const [kasiValueStr, setKasiValue] = React.useState("");
   const [cd, setCd] = React.useState("");
@@ -40,10 +43,13 @@ export const LedgerListNewRow = (props: {
   const kasiRef = React.createRef<HTMLInputElement>();
 
   const context = React.useContext(Context);
+  const reloadLedger = createReloadLedger(context);
 
   const updateDate = (dateStr: string) => {
     props.setError("date_required", { hasError: false });
     props.setError("date_format", { hasError: false });
+    props.setError("date_nendo_range", { hasError: false });
+    props.setError("date_month_range", { hasError: false });
     if (dateStr == null || dateStr.length === 0) {
       props.setError("date_required", {
         hasError: true,
@@ -56,9 +62,7 @@ export const LedgerListNewRow = (props: {
     // 二通りのフォーマットでチェックしどちらか片方がOKの場合に更新する
     const date1 = DateTime.fromFormat(dateStr, "yyyymmdd");
     const date2 = DateTime.fromFormat(dateStr, "yyyy/mm/dd");
-    if (date1.invalidReason == null || date2.invalidReason == null) {
-      return true;
-    } else {
+    if (!(date1.invalidReason == null || date2.invalidReason == null)) {
       props.setError("date_format", {
         hasError: true,
         message: `日付が不正です: ${dateStr}`,
@@ -66,6 +70,46 @@ export const LedgerListNewRow = (props: {
       });
       return false;
     }
+
+    const rawDate = toRawDate(dateStr);
+    const nendoMaster = nendoMap.get(context.nendo);
+    const isDateInNendoRange = (d: string) => {
+      if (nendoMaster == null) {
+        return false;
+      }
+      if (!(d >= nendoMaster.start_date && d <= nendoMaster.end_date)) {
+        return false;
+      }
+      return true;
+    };
+    if (!isDateInNendoRange(rawDate)) {
+      props.setError("date_nendo_range", {
+        hasError: true,
+        message: `対象年度内の日付で入力してください: ${DateTime.fromFormat(
+          rawDate,
+          "yyyymmdd"
+        ).toFormat("yyyy/mm/dd")}`,
+        targetId: ["date"],
+      });
+      return false;
+    }
+
+    if (
+      context.ledgerMonth != null &&
+      rawDate.substr(4, 2) !== context.ledgerMonth
+    ) {
+      props.setError("date_month_range", {
+        hasError: true,
+        message: `対象月内の日付で入力してください: ${DateTime.fromFormat(
+          rawDate,
+          "yyyymmdd"
+        ).toFormat("yyyy/mm/dd")}`,
+        targetId: ["date"],
+      });
+      return false;
+    }
+
+    return true;
   };
 
   // 借方金額更新処理
@@ -179,23 +223,33 @@ export const LedgerListNewRow = (props: {
   };
 
   const save = () => {
+    let date;
+    if (context.ledgerMonth != null) {
+      date = `${context.nendo}${context.ledgerMonth}${dateStrDD}`;
+    } else {
+      date = dateStr;
+    }
     const validateResutls = [
-      updateDate(dateStr),
+      updateDate(date),
       updateKariValue(kariValueStr),
       updateKasiValue(kasiValueStr),
       updateCd(cd),
     ];
     if (validateResutls.every((valid) => valid)) {
-      createLedger({
-        nendo: context.nendo,
-        date: toRawDate(dateStr),
-        ledger_cd: context.ledgerCd,
-        other_cd: cd,
-        karikata_value: toNumber(kariValueStr),
-        kasikata_value: toNumber(kasiValueStr),
-        note: undefined,
-      });
+      createLedger(
+        {
+          nendo: context.nendo,
+          date: toRawDate(date),
+          ledger_cd: context.ledgerCd,
+          other_cd: cd,
+          karikata_value: toNumber(kariValueStr),
+          kasikata_value: toNumber(kasiValueStr),
+          note: undefined,
+        },
+        reloadLedger(false)
+      );
       setDate("");
+      setDateDD("");
       setCd("");
       setCdName("");
       setKariValue("");
@@ -213,38 +267,72 @@ export const LedgerListNewRow = (props: {
   return (
     <tr>
       <td className="ledgerBody-date">
-        <input
-          type="text"
-          value={dateStr}
-          maxLength={8}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-            setDate(e.target.value);
-          }}
-          onFocus={(e: React.ChangeEvent<HTMLInputElement>) => {
-            const dateStr = e.target.value;
-            const date = DateTime.fromFormat(dateStr, "yyyy/mm/dd");
-            if (date.invalidReason == null) {
-              setDate(date.toFormat("yyyymmdd"));
-            }
-          }}
-          onBlur={(e: React.ChangeEvent<HTMLInputElement>) => {
-            const dateStr = e.target.value;
-            const date = DateTime.fromFormat(dateStr, "yyyymmdd");
-            if (date.invalidReason == null) {
-              setDate(date.toFormat("yyyy/mm/dd"));
-            }
-          }}
-          onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
-            if (e.key === "Enter") {
-              save();
-            }
-          }}
-          className={`ledgerBody-date-input ${
-            props.error.date_format != null || props.error.date_required
-              ? "error"
-              : ""
-          }`}
-        />
+        {context.ledgerMonth != null ? (
+          <>
+            <input
+              type="text"
+              value={`${context.nendo}/${context.ledgerMonth}/`}
+              maxLength={6}
+              readOnly
+              disabled
+              className={`ledgerBody-date-yyyymm`}
+            />
+            <input
+              type="text"
+              value={dateStrDD}
+              maxLength={2}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                setDateDD(e.target.value);
+              }}
+              onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+                if (e.key === "Enter") {
+                  save();
+                }
+              }}
+              className={`ledgerBody-date-dd ${
+                props.error.date_format != null || props.error.date_required
+                  ? "error"
+                  : ""
+              }`}
+            />
+          </>
+        ) : (
+          <input
+            type="text"
+            value={dateStr}
+            maxLength={8}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+              setDate(e.target.value);
+            }}
+            onFocus={(e: React.ChangeEvent<HTMLInputElement>) => {
+              const dateStr = e.target.value;
+              const date = DateTime.fromFormat(dateStr, "yyyy/mm/dd");
+              if (date.invalidReason == null) {
+                setDate(date.toFormat("yyyymmdd"));
+              }
+            }}
+            onBlur={(e: React.ChangeEvent<HTMLInputElement>) => {
+              const dateStr = e.target.value;
+              const date = DateTime.fromFormat(dateStr, "yyyymmdd");
+              if (date.invalidReason == null) {
+                setDate(date.toFormat("yyyy/mm/dd"));
+              }
+            }}
+            onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+              if (e.key === "Enter") {
+                save();
+              }
+            }}
+            className={`ledgerBody-date-input ${
+              props.error.date_format != null ||
+              props.error.date_required ||
+              props.error.date_month_range ||
+              props.error.date_nendo_range
+                ? "error"
+                : ""
+            }`}
+          />
+        )}
       </td>
       <td className="ledgerBody-anotherCd">
         <div className="cdSelect">
@@ -307,6 +395,21 @@ export const LedgerListNewRow = (props: {
             setKariValue(e.target.value);
             updateKariValue(e.target.value);
           }}
+          onFocus={(e: React.ChangeEvent<HTMLInputElement>) => {
+            const valueStr = e.target.value;
+            if (valueStr.length === 0) {
+              return;
+            }
+            const value = Numeral(valueStr);
+            const rawValue = `${value.value()}`;
+            setKariValue(rawValue);
+          }}
+          onBlur={(e: React.ChangeEvent<HTMLInputElement>) => {
+            const valueStr = e.target.value;
+            const value = Numeral(valueStr);
+            const fmtValue = value.value() == null ? "" : value.format("0,0");
+            setKariValue(fmtValue);
+          }}
           onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
             if (e.key === "Enter") {
               save();
@@ -330,6 +433,21 @@ export const LedgerListNewRow = (props: {
           onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
             setKasiValue(e.target.value);
             updateKasiValue(e.target.value);
+          }}
+          onFocus={(e: React.ChangeEvent<HTMLInputElement>) => {
+            const valueStr = e.target.value;
+            if (valueStr.length === 0) {
+              return;
+            }
+            const value = Numeral(valueStr);
+            const rawValue = `${value.value()}`;
+            setKasiValue(rawValue);
+          }}
+          onBlur={(e: React.ChangeEvent<HTMLInputElement>) => {
+            const valueStr = e.target.value;
+            const value = Numeral(valueStr);
+            const fmtValue = value.value() == null ? "" : value.format("0,0");
+            setKasiValue(fmtValue);
           }}
           onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
             if (e.key === "Enter") {

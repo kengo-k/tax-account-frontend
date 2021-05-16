@@ -1,7 +1,8 @@
 import * as React from "react";
 import flatmap from "lodash.flatmap";
 import { DateTime } from "luxon";
-import { useActions, useState } from "@module/action";
+import Numeral from "numeral";
+import { useActions, useState, actions } from "@module/action";
 import { LedgerListRow } from "@component/ledger/LedgerListRow";
 import { LedgerListNewRow } from "@component/ledger/LedgerListNewRow";
 import {
@@ -12,17 +13,23 @@ import {
 } from "@component/ledger/LedgerListError";
 import { LedgerSearchResponse } from "@common/model/journal/LedgerSearchResponse";
 import { SaimokuMasterEntity } from "@common/model/master/SaimokuMasterEntity";
+import { Context, IContext } from "@component/Main";
 
 export const LedgerList = (props: { nendo: string; ledgerCd: string }) => {
   const { loadLedger } = useActions();
+  const context = React.useContext(Context);
   const state = useState();
   const [errors, setErrors] = React.useState(
     new Map() as LedgerListInputErrors
   );
 
   React.useEffect(() => {
-    loadLedger({ nendo: props.nendo, ledger_cd: props.ledgerCd, month: "-1" });
-  }, [props]);
+    loadLedger({
+      nendo: props.nendo,
+      ledger_cd: props.ledgerCd,
+      month: context.ledgerMonth,
+    });
+  }, [props, context.ledgerMonth]);
 
   const ledgerListRows: (
     | { isNewRow: true; journal_id: number }
@@ -110,7 +117,7 @@ export const toNumber = (s: string | undefined) => {
   if (s.length === 0) {
     return null;
   }
-  return Number(s);
+  return Numeral(s).value();
 };
 
 export const toRawDate = (dateStr: string) => {
@@ -139,3 +146,24 @@ export const filterSaimokuList = (
     return [];
   });
 };
+
+// 更新後に必要な処理
+// 金額等を更新すると累計金額が全体的に変更されるため全データを取り直す必要がある。
+export const createReloadLedger =
+  (context: IContext) => (needClear?: boolean) => {
+    const ret = [];
+    if (needClear) {
+      // 日付を変更する場合、データの並び順が変わってしまうがその場合、
+      // 再描画で行が重複してしまう(※原因要調査)ため事前にクリア処理をする。
+      // ただしクリアするとフォーカスを失う模様。
+      ret.push(actions.setLedger([]));
+    }
+    ret.push(
+      actions.loadLedger({
+        nendo: context.nendo,
+        ledger_cd: context.ledgerCd,
+        month: context.ledgerMonth,
+      })
+    );
+    return ret;
+  };

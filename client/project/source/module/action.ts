@@ -12,6 +12,18 @@ import { LedgerCreateRequest } from "@common/model/journal/LedgerCreateRequest";
 import { SummaryRequest } from "@common/model/presentation/SummaryRequest";
 import { SummaryResponse } from "@common/model/presentation/SummaryResponse";
 
+type NextActions = any[] | (() => any[]);
+const callNextActions = (nextActions: NextActions | undefined) => {
+  if (nextActions == null) {
+    return [];
+  }
+  if (typeof nextActions === "function") {
+    return nextActions();
+  } else {
+    return nextActions;
+  }
+};
+
 const moduleSymbol = Symbol("account");
 const [module, actions, state] = createModule(moduleSymbol)
   .withActions({
@@ -34,16 +46,22 @@ const [module, actions, state] = createModule(moduleSymbol)
     updateJournal: (
       id: number,
       journal: Partial<Omit<JournalEntity, "id">>,
-      nextActions?: any[] | (() => any[])
+      nextActions?: NextActions
     ) => ({
       payload: { id, journal, nextActions },
     }),
-    deleteJournal: (id: number, nextActions?: any[] | (() => any[])) => ({
+    deleteJournal: (id: number, nextActions?: NextActions) => ({
       payload: { id, nextActions },
     }),
-    createLedger: (ledger: LedgerCreateRequest) => ({ payload: { ledger } }),
-    updateLedger: (id: number, ledger: Omit<LedgerUpdateRequest, "id">) => ({
-      payload: { id, ledger },
+    createLedger: (ledger: LedgerCreateRequest, nextActions?: NextActions) => ({
+      payload: { ledger, nextActions },
+    }),
+    updateLedger: (
+      id: number,
+      ledger: Omit<LedgerUpdateRequest, "id">,
+      nextActions?: NextActions
+    ) => ({
+      payload: { id, ledger, nextActions },
     }),
     setTmpLedgerCd: (tmpLedgerCd: string) => ({ payload: { tmpLedgerCd } }),
     loadSummary: (summaryRequest: SummaryRequest) => ({
@@ -66,9 +84,8 @@ module
   })
   .on(actions.loadLedger, ({ ledgerSearchRequest }) => {
     return Rx.fromPromise(
-      PresentationApi.selectLedger({
-        nendo: ledgerSearchRequest.nendo,
-        ledger_cd: ledgerSearchRequest.ledger_cd,
+      PresentationApi.selectLedger(ledgerSearchRequest, {
+        month: ledgerSearchRequest.month,
       })
     ).pipe(
       Rx.map((res) => {
@@ -91,54 +108,28 @@ module
   .on(actions.updateJournal, ({ id, journal, nextActions }) => {
     return Rx.fromPromise(PresentationApi.updateJournal(id, journal)).pipe(
       Rx.map(() => {
-        if (nextActions == null) {
-          return [];
-        }
-        if (typeof nextActions === "function") {
-          return nextActions();
-        } else {
-          return nextActions;
-        }
+        return callNextActions(nextActions);
       })
     );
   })
   .on(actions.deleteJournal, ({ id, nextActions }) => {
     return Rx.fromPromise(PresentationApi.deleteJournal(id)).pipe(
       Rx.map(() => {
-        if (nextActions == null) {
-          return [];
-        }
-        if (typeof nextActions === "function") {
-          return nextActions();
-        } else {
-          return nextActions;
-        }
+        return callNextActions(nextActions);
       })
     );
   })
-  .on(actions.createLedger, ({ ledger }) => {
+  .on(actions.createLedger, ({ ledger, nextActions }) => {
     return Rx.fromPromise(PresentationApi.createLedger(ledger)).pipe(
-      Rx.map((res) => {
-        return [
-          actions.loadLedger({
-            nendo: res.data.body.nendo,
-            ledger_cd: ledger.ledger_cd,
-            month: "-1",
-          }),
-        ];
+      Rx.map(() => {
+        return callNextActions(nextActions);
       })
     );
   })
-  .on(actions.updateLedger, ({ id, ledger }) => {
+  .on(actions.updateLedger, ({ id, ledger, nextActions }) => {
     return Rx.fromPromise(PresentationApi.updateLedger(id, ledger)).pipe(
-      Rx.map((res) => {
-        return [
-          actions.loadLedger({
-            nendo: res.data.body.nendo,
-            ledger_cd: ledger.ledger_cd,
-            month: "-1",
-          }),
-        ];
+      Rx.map(() => {
+        return callNextActions(nextActions);
       })
     );
   })

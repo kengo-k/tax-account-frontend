@@ -3,8 +3,9 @@ import { useSelector } from "typeless";
 import { useDebouncedCallback } from "use-debounce";
 import { DateTime } from "luxon";
 import Numeral from "numeral";
-import { useActions, actions, useState } from "@module/action";
+import { useActions, useState } from "@module/action";
 import { selectSaimokuMap } from "@module/selector/selectSaimokuMap";
+import { selectNendoMap } from "@module/selector/selectNendoMap";
 import { LedgerSearchResponse } from "@common/model/journal/LedgerSearchResponse";
 import {
   LedgerListInputErrorItem,
@@ -14,7 +15,11 @@ import {
 import { Context } from "@component/Main";
 import { SaimokuMasterEntity } from "@common/model/master/SaimokuMasterEntity";
 import { LedgerUpdateRequest } from "@common/model/journal/LedgerUpdateRequest";
-import { toNumber, filterSaimokuList } from "@component/ledger/LedgerList";
+import {
+  toNumber,
+  filterSaimokuList,
+  createReloadLedger,
+} from "@component/ledger/LedgerList";
 
 export const LedgerListRow = (props: {
   ledger: LedgerSearchResponse;
@@ -25,8 +30,10 @@ export const LedgerListRow = (props: {
   const { updateJournal, deleteJournal, updateLedger } = useActions();
   const { saimokuList } = useState();
   const saimokuMap = useSelector(selectSaimokuMap);
+  const nendoMap = useSelector(selectNendoMap);
 
   const [dateStr, setDate] = React.useState(props.ledger.date);
+  const [dateStrDD, setDateDD] = React.useState(props.ledger.date.substr(6, 2));
   // prettier-ignore
   const [kariValueStr, setKariValue] = React.useState(`${props.ledger.karikata_value}`);
   // prettier-ignore
@@ -42,26 +49,7 @@ export const LedgerListRow = (props: {
   const kasiRef = React.createRef<HTMLInputElement>();
 
   const context = React.useContext(Context);
-
-  // 更新後に必要な処理
-  // 金額等を更新すると累計金額が全体的に変更されるため全データを取り直す必要がある。
-  const reloadLedger = (needClear?: boolean) => {
-    const ret = [];
-    if (needClear) {
-      // 日付を変更する場合、データの並び順が変わってしまうがその場合、
-      // 再描画で行が重複してしまう(※原因要調査)ため事前にクリア処理をする。
-      // ただしクリアするとフォーカスを失う模様。
-      ret.push(actions.setLedger([]));
-    }
-    ret.push(
-      actions.loadLedger({
-        nendo: context.nendo,
-        ledger_cd: context.ledgerCd,
-        month: "-1",
-      })
-    );
-    return ret;
-  };
+  const reloadLedger = createReloadLedger(context);
 
   const updateDateDebounced = useDebouncedCallback((dateStr: string) => {
     updateJournal(
@@ -73,7 +61,7 @@ export const LedgerListRow = (props: {
 
   const updateLedgerDebounced = useDebouncedCallback(
     (request: LedgerUpdateRequest) => {
-      updateLedger(request.id, request);
+      updateLedger(request.id, request, reloadLedger(false));
     },
     1500
   );
@@ -81,6 +69,8 @@ export const LedgerListRow = (props: {
   const updateDate = (dateStr: string) => {
     props.setError("date_required", { hasError: false });
     props.setError("date_format", { hasError: false });
+    props.setError("date_nendo_range", { hasError: false });
+    props.setError("date_month_range", { hasError: false });
     if (dateStr == null || dateStr.length === 0) {
       props.setError("date_required", {
         hasError: true,
@@ -90,15 +80,52 @@ export const LedgerListRow = (props: {
       return;
     }
     const date = DateTime.fromFormat(dateStr, "yyyymmdd");
-    if (date.invalidReason == null) {
-      updateDateDebounced(dateStr);
-    } else {
+    if (date.invalidReason != null) {
       props.setError("date_format", {
         hasError: true,
         message: `日付が不正です: ${dateStr}`,
         targetId: ["date"],
       });
+      return;
     }
+
+    const nendoMaster = nendoMap.get(context.nendo);
+    const isDateInNendoRange = (d: string) => {
+      if (nendoMaster == null) {
+        return false;
+      }
+      if (!(d >= nendoMaster.start_date && d <= nendoMaster.end_date)) {
+        return false;
+      }
+      return true;
+    };
+    if (!isDateInNendoRange(dateStr)) {
+      props.setError("date_nendo_range", {
+        hasError: true,
+        message: `対象年度内の日付で入力してください: ${DateTime.fromFormat(
+          dateStr,
+          "yyyymmdd"
+        ).toFormat("yyyy/mm/dd")}`,
+        targetId: ["date"],
+      });
+      return;
+    }
+
+    if (
+      context.ledgerMonth != null &&
+      dateStr.substr(4, 2) !== context.ledgerMonth
+    ) {
+      props.setError("date_month_range", {
+        hasError: true,
+        message: `対象月内の日付で入力してください: ${DateTime.fromFormat(
+          dateStr,
+          "yyyymmdd"
+        ).toFormat("yyyy/mm/dd")}`,
+        targetId: ["date"],
+      });
+      return;
+    }
+    updateDateDebounced(dateStr);
   };
 
   // 借方金額更新処理
@@ -256,10 +283,14 @@ export const LedgerListRow = (props: {
     const kariValue = Numeral(kariValueStr);
     if (kariValue.value() === 0) {
       setKariValue("");
+    } else {
+      setKariValue(kariValue.format("0,0"));
     }
     const kasiValue = Numeral(kasiValueStr);
     if (kasiValue.value() === 0) {
       setKasiValue("");
+    } else {
+      setKasiValue(kasiValue.format("0,0"));
     }
   }, []);
 
@@ -278,35 +309,70 @@ export const LedgerListRow = (props: {
   return (
     <tr>
       <td className="ledgerBody-date">
-        <input
-          type="text"
-          value={dateStr}
-          maxLength={8}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-            setDate(e.target.value);
-            updateDate(e.target.value);
-          }}
-          onFocus={(e: React.ChangeEvent<HTMLInputElement>) => {
-            const dateStr = e.target.value;
-            const date = DateTime.fromFormat(dateStr, "yyyy/mm/dd");
-            if (date.invalidReason == null) {
-              setDate(date.toFormat("yyyymmdd"));
-            }
-          }}
-          onBlur={(e: React.ChangeEvent<HTMLInputElement>) => {
-            const dateStr = e.target.value;
-            const date = DateTime.fromFormat(dateStr, "yyyymmdd");
-            if (date.invalidReason == null) {
-              setDate(date.toFormat("yyyy/mm/dd"));
-            }
-            props.notifyError();
-          }}
-          className={`ledgerBody-date-input ${
-            props.error.date_format != null || props.error.date_required
-              ? "error"
-              : ""
-          }`}
-        />
+        {context.ledgerMonth != null ? (
+          <>
+            <input
+              type="text"
+              value={`${context.nendo}/${context.ledgerMonth}/`}
+              maxLength={6}
+              readOnly
+              disabled
+              className={`ledgerBody-date-yyyymm`}
+            />
+            <input
+              type="text"
+              value={dateStrDD}
+              maxLength={2}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                setDateDD(e.target.value);
+                updateDate(
+                  `${context.nendo}${context.ledgerMonth}${e.target.value}`
+                );
+              }}
+              onBlur={() => {
+                props.notifyError();
+              }}
+              className={`ledgerBody-date-dd ${
+                props.error.date_format != null || props.error.date_required
+                  ? "error"
+                  : ""
+              }`}
+            />
+          </>
+        ) : (
+          <input
+            type="text"
+            value={dateStr}
+            maxLength={8}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+              setDate(e.target.value);
+              updateDate(e.target.value);
+            }}
+            onFocus={(e: React.ChangeEvent<HTMLInputElement>) => {
+              const dateStr = e.target.value;
+              const date = DateTime.fromFormat(dateStr, "yyyy/mm/dd");
+              if (date.invalidReason == null) {
+                setDate(date.toFormat("yyyymmdd"));
+              }
+            }}
+            onBlur={(e: React.ChangeEvent<HTMLInputElement>) => {
+              const dateStr = e.target.value;
+              const date = DateTime.fromFormat(dateStr, "yyyymmdd");
+              if (date.invalidReason == null) {
+                setDate(date.toFormat("yyyy/mm/dd"));
+              }
+              props.notifyError();
+            }}
+            className={`ledgerBody-date-input ${
+              props.error.date_format != null ||
+              props.error.date_required ||
+              props.error.date_month_range ||
+              props.error.date_nendo_range
+                ? "error"
+                : ""
+            }`}
+          />
+        )}
       </td>
       <td className="ledgerBody-anotherCd">
         <div className="cdSelect">
@@ -356,7 +422,20 @@ export const LedgerListRow = (props: {
             setKariValue(e.target.value);
             updateKariValue(e.target.value);
           }}
+          onFocus={(e: React.ChangeEvent<HTMLInputElement>) => {
+            const valueStr = e.target.value;
+            if (valueStr.length === 0) {
+              return;
+            }
+            const value = Numeral(valueStr);
+            const rawValue = `${value.value()}`;
+            setKariValue(rawValue);
+          }}
           onBlur={(e: React.ChangeEvent<HTMLInputElement>) => {
+            const valueStr = e.target.value;
+            const value = Numeral(valueStr);
+            const fmtValue = value.value() == null ? "" : value.format("0,0");
+            setKariValue(fmtValue);
             props.notifyError();
           }}
           className={`num value ${
@@ -378,7 +457,20 @@ export const LedgerListRow = (props: {
             setKasiValue(e.target.value);
             updateKasiValue(e.target.value);
           }}
+          onFocus={(e: React.ChangeEvent<HTMLInputElement>) => {
+            const valueStr = e.target.value;
+            if (valueStr.length === 0) {
+              return;
+            }
+            const value = Numeral(valueStr);
+            const rawValue = `${value.value()}`;
+            setKasiValue(rawValue);
+          }}
           onBlur={(e: React.ChangeEvent<HTMLInputElement>) => {
+            const valueStr = e.target.value;
+            const value = Numeral(valueStr);
+            const fmtValue = value.value() == null ? "" : value.format("0,0");
+            setKasiValue(fmtValue);
             props.notifyError();
           }}
           className={`num value ${

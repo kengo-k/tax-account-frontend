@@ -21,6 +21,8 @@ interface Invalid {
 export interface LedgerListInputErrorItem {
   date_required?: Omit<Invalid, "hasError">;
   date_format?: Omit<Invalid, "hasError">;
+  date_month_range?: Omit<Invalid, "hasError">;
+  date_nendo_range?: Omit<Invalid, "hasError">;
   cd_required?: Omit<Invalid, "hasError">;
   cd_invalid?: Omit<Invalid, "hasError">;
   kari_format?: Omit<Invalid, "hasError">;
