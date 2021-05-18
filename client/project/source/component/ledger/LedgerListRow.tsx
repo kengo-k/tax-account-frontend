@@ -12,7 +12,6 @@ import {
   SetLedgerListInputError,
   hasError,
 } from "@component/ledger/LedgerListError";
-import { Context } from "@component/Main";
 import { SaimokuMasterEntity } from "@common/model/master/SaimokuMasterEntity";
 import { LedgerUpdateRequest } from "@common/model/journal/LedgerUpdateRequest";
 import {
@@ -22,6 +21,11 @@ import {
 } from "@component/ledger/LedgerList";
 
 export const LedgerListRow = (props: {
+  nendo: string;
+  ledgerCd: string;
+  ledgerMonth?: string;
+  pageNo: number;
+  pageSize: number;
   ledger: LedgerSearchResponse;
   error: Readonly<LedgerListInputErrorItem>;
   setError: SetLedgerListInputError;
@@ -48,8 +52,13 @@ export const LedgerListRow = (props: {
   const kariRef = React.createRef<HTMLInputElement>();
   const kasiRef = React.createRef<HTMLInputElement>();
 
-  const context = React.useContext(Context);
-  const reloadLedger = createReloadLedger(context);
+  const reloadLedger = createReloadLedger(
+    props.nendo,
+    props.ledgerCd,
+    props.ledgerMonth,
+    props.pageNo,
+    props.pageSize
+  );
 
   const updateDateDebounced = useDebouncedCallback((dateStr: string) => {
     updateJournal(
@@ -89,7 +98,7 @@ export const LedgerListRow = (props: {
       return;
     }
 
-    const nendoMaster = nendoMap.get(context.nendo);
+    const nendoMaster = nendoMap.get(props.nendo);
     const isDateInNendoRange = (d: string) => {
       if (nendoMaster == null) {
         return false;
@@ -112,8 +121,8 @@ export const LedgerListRow = (props: {
     }
 
     if (
-      context.ledgerMonth != null &&
-      dateStr.substr(4, 2) !== context.ledgerMonth
+      props.ledgerMonth != null &&
+      dateStr.substr(4, 2) !== props.ledgerMonth
     ) {
       props.setError("date_month_range", {
         hasError: true,
@@ -161,7 +170,7 @@ export const LedgerListRow = (props: {
     }
     updateLedgerDebounced({
       id: props.ledger.journal_id,
-      ledger_cd: context.ledgerCd,
+      ledger_cd: props.ledgerCd,
       other_cd: props.ledger.another_cd,
       karikata_value: toNumber(valueStr),
       kasikata_value: toNumber(kasiRef.current?.value),
@@ -201,7 +210,7 @@ export const LedgerListRow = (props: {
     }
     updateLedgerDebounced({
       id: props.ledger.journal_id,
-      ledger_cd: context.ledgerCd,
+      ledger_cd: props.ledgerCd,
       other_cd: props.ledger.another_cd,
       karikata_value: toNumber(kariRef.current?.value),
       kasikata_value: toNumber(valueStr),
@@ -268,7 +277,7 @@ export const LedgerListRow = (props: {
     }
     updateLedgerDebounced({
       id: props.ledger.journal_id,
-      ledger_cd: context.ledgerCd,
+      ledger_cd: props.ledgerCd,
       other_cd: paramCd,
       karikata_value: toNumber(kariRef.current?.value),
       kasikata_value: toNumber(kasiRef.current?.value),
@@ -309,11 +318,14 @@ export const LedgerListRow = (props: {
   return (
     <tr>
       <td className="ledgerBody-date">
-        {context.ledgerMonth != null ? (
+        {props.ledgerMonth !== "all" ? (
           <>
             <input
               type="text"
-              value={`${context.nendo}/${context.ledgerMonth}/`}
+              value={`${DateTime.fromFormat(
+                props.ledger.date,
+                "yyyymmdd"
+              ).toFormat("yyyy/mm/")}`}
               maxLength={6}
               readOnly
               disabled
@@ -326,7 +338,7 @@ export const LedgerListRow = (props: {
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                 setDateDD(e.target.value);
                 updateDate(
-                  `${context.nendo}${context.ledgerMonth}${e.target.value}`
+                  `${props.nendo}${props.ledgerMonth}${e.target.value}`
                 );
               }}
               onBlur={() => {

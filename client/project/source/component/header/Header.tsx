@@ -1,21 +1,27 @@
 import * as React from "react";
+import { useHistory } from "react-router";
 import Numeral from "numeral";
 import { useActions, useState } from "@module/action";
-import { Context } from "@component/Main";
 
-export const Header = () => {
+export interface HeaderParams {
+  nendo: string | undefined;
+  showJournal: boolean;
+  journalsOrder: string | undefined;
+  showLedger: boolean;
+  ledgerCd: string | undefined;
+  ledgerMonth: string | undefined;
+}
+
+export const Header = (props: HeaderParams) => {
   // load initial data
   const { loadInit, loadSummary, setSummary, setTmpLedgerCd } = useActions();
-  const context = React.useContext(Context);
   const state = useState();
 
-  const [journalChecked, setJournalChecked] = React.useState(
-    context.showJournal
-  );
+  const [journalChecked, setJournalChecked] = React.useState(props.showJournal);
   const [ledgerChecked, setLedgerChecked] = React.useState(
-    context.ledgerCd != null
+    props.ledgerCd != null
   );
-  const [ledgerCd, setLedgerCd] = React.useState(context.ledgerCd);
+  const [ledgerCd, setLedgerCd] = React.useState(props.ledgerCd);
   const [journalsOrder, setJournalsOrder] = React.useState(
     undefined as string | undefined
   );
@@ -34,6 +40,7 @@ export const Header = () => {
     ledgerCd: string | undefined;
     journalsOrder: string | undefined;
     ledgerMonth: string | undefined;
+    pageNo?: number | undefined;
   }): string => {
     const url = [];
     if (props.nendo === "") {
@@ -56,6 +63,9 @@ export const Header = () => {
     if (props.ledgerMonth != null) {
       query.push(`month=${props.ledgerMonth}`);
     }
+    if (props.pageNo != null) {
+      query.push(`page_no=${props.pageNo}`);
+    }
     const ret = `/${url.join("/")}${
       query.length === 0 ? "" : `?${query.join("&")}`
     }`;
@@ -67,29 +77,30 @@ export const Header = () => {
   }, []);
 
   React.useEffect(() => {
-    if (context.ledgerCd != null) {
-      setTmpLedgerCd(context.ledgerCd);
+    if (props.ledgerCd != null) {
+      setTmpLedgerCd(props.ledgerCd);
     }
-  }, [context.ledgerCd]);
+  }, [props.ledgerCd]);
 
   React.useEffect(() => {
-    if (context.nendo != null) {
-      loadSummary({ nendo: context.nendo });
+    if (props.nendo != null) {
+      loadSummary({ nendo: props.nendo });
     } else {
       setSummary({ sales: 0, expenses: 0, tax: undefined });
     }
-  }, [context.nendo]);
+  }, [props.nendo]);
 
   React.useEffect(() => {
-    if (context.journalsOrder != null) {
-      setJournalsOrder(context.journalsOrder);
+    if (props.journalsOrder != null) {
+      setJournalsOrder(props.journalsOrder);
     }
-  }, [context.journalsOrder]);
+  }, [props.journalsOrder]);
 
   React.useEffect(() => {
-    setLedgerMonth(context.ledgerMonth);
-  }, [context.ledgerMonth]);
+    setLedgerMonth(props.ledgerMonth);
+  }, [props.ledgerMonth]);
 
+  const history = useHistory();
   return (
     <>
       <div className="mainHeaderRoot">
@@ -98,16 +109,17 @@ export const Header = () => {
           <label>
             年度:
             <select
-              value={context.nendo}
+              value={props.nendo}
               onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
-                context.history.push(
+                history.push(
                   createUrl({
                     nendo: e.target.value,
-                    ledgerCd: context.ledgerCd,
-                    showJournal: context.showJournal,
-                    showLedger: context.showLedger,
-                    journalsOrder: context.journalsOrder,
-                    ledgerMonth: context.ledgerMonth,
+                    ledgerCd: props.ledgerCd,
+                    showJournal: props.showJournal,
+                    showLedger: props.showLedger,
+                    journalsOrder: props.journalsOrder,
+                    ledgerMonth: props.ledgerMonth,
+                    pageNo: 1,
                   })
                 );
               }}
@@ -129,9 +141,9 @@ export const Header = () => {
                 if (journalRef.current?.checked) {
                   setJournalChecked(true);
                   setLedgerChecked(false);
-                  context.history.push(
+                  history.push(
                     createUrl({
-                      nendo: context.nendo,
+                      nendo: props.nendo,
                       ledgerCd: undefined,
                       showJournal: true,
                       showLedger: false,
@@ -141,9 +153,9 @@ export const Header = () => {
                   );
                 } else {
                   setJournalChecked(false);
-                  context.history.push(
+                  history.push(
                     createUrl({
-                      nendo: context.nendo,
+                      nendo: props.nendo,
                       ledgerCd: undefined,
                       showJournal: false,
                       showLedger: false,
@@ -154,7 +166,7 @@ export const Header = () => {
                 }
               }}
               ref={journalRef}
-              disabled={context.nendo == null}
+              disabled={props.nendo == null}
             />
             仕訳帳
           </label>
@@ -169,11 +181,11 @@ export const Header = () => {
                 if (ledgerRef.current?.checked) {
                   setLedgerChecked(true);
                   setJournalChecked(false);
-                  if (ledgerCd != null) {
-                    context.history.push(
+                  if (state.tmpLedgerCd != null) {
+                    history.push(
                       createUrl({
-                        nendo: context.nendo,
-                        ledgerCd: ledgerCd,
+                        nendo: props.nendo,
+                        ledgerCd: state.tmpLedgerCd,
                         showJournal: false,
                         showLedger: true,
                         journalsOrder: undefined,
@@ -181,9 +193,9 @@ export const Header = () => {
                       })
                     );
                   } else {
-                    context.history.push(
+                    history.push(
                       createUrl({
-                        nendo: context.nendo,
+                        nendo: props.nendo,
                         ledgerCd: undefined,
                         showJournal: false,
                         showLedger: true,
@@ -194,9 +206,9 @@ export const Header = () => {
                   }
                 } else {
                   setLedgerChecked(false);
-                  context.history.push(
+                  history.push(
                     createUrl({
-                      nendo: context.nendo,
+                      nendo: props.nendo,
                       ledgerCd: undefined,
                       showJournal: false,
                       showLedger: false,
@@ -207,7 +219,7 @@ export const Header = () => {
                 }
               }}
               ref={ledgerRef}
-              disabled={context.nendo == null}
+              disabled={props.nendo == null}
             />
             出納帳
           </label>
@@ -216,9 +228,9 @@ export const Header = () => {
             onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
               setLedgerCd(e.target.value);
               setTmpLedgerCd(e.target.value);
-              context.history.push(
+              history.push(
                 createUrl({
-                  nendo: context.nendo,
+                  nendo: props.nendo,
                   ledgerCd: e.target.value,
                   showJournal: false,
                   showLedger: true,
@@ -239,38 +251,52 @@ export const Header = () => {
               );
             })}
           </select>
-          {context.showLedger ? (
+          {props.showLedger ? (
             <div className="ledgerSearchOption">
               <hr />
-              {context.showLedger && context.ledgerCd == null ? (
+              {props.showLedger && props.ledgerCd == null ? (
                 <span className="warning">台帳コードを選択してください</span>
               ) : (
                 <></>
               )}
-              {context.showLedger && context.ledgerCd != null ? (
+              {props.showLedger && props.ledgerCd != null ? (
                 <>
                   対象月:
                   <select
                     value={ledgerMonth == null ? "" : ledgerMonth}
                     onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
-                      const value =
-                        e.target.value === "" ? undefined : e.target.value;
+                      const value = e.target.value; //=== "" ? undefined : e.target.value;
                       setLedgerMonth(value);
-                      context.history.push(
+                      history.push(
                         createUrl({
-                          nendo: context.nendo,
-                          ledgerCd: context.ledgerCd,
+                          nendo: props.nendo,
+                          ledgerCd: props.ledgerCd,
                           showJournal: false,
                           showLedger: true,
                           journalsOrder: undefined,
                           ledgerMonth: value,
+                          pageNo: 1,
                         })
                       );
                     }}
                   >
-                    {["", 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((m) => {
-                      const value = m !== "" ? Numeral(m).format("00") : "";
-                      return <option value={value}>{value}</option>;
+                    {[
+                      "all",
+                      "01",
+                      "02",
+                      "03",
+                      "04",
+                      "05",
+                      "06",
+                      "07",
+                      "08",
+                      "09",
+                      "10",
+                      "11",
+                      "12",
+                    ].map((m) => {
+                      //const value = m !== "" ? Numeral(m).format("00") : "";
+                      return <option value={m}>{m === "all" ? "" : m}</option>;
                     })}
                   </select>
                 </>
@@ -281,19 +307,18 @@ export const Header = () => {
           ) : (
             <></>
           )}
-          {context.showJournal ? (
+          {props.showJournal ? (
             <div className="journalSearchOption">
               <hr />
               表示順:
               <select
                 value={journalsOrder}
                 onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
-                  const value =
-                    e.target.value === "" ? undefined : e.target.value;
+                  const value = e.target.value;
                   setJournalsOrder(value);
-                  context.history.push(
+                  history.push(
                     createUrl({
-                      nendo: context.nendo,
+                      nendo: props.nendo,
                       ledgerCd: undefined,
                       showJournal: true,
                       showLedger: false,
@@ -303,7 +328,7 @@ export const Header = () => {
                   );
                 }}
               >
-                <option></option>
+                <option value="0"></option>
                 <option value="1">更新日/降順</option>
                 <option value="2">金額/降順</option>
                 <option value="3">金額/昇順</option>

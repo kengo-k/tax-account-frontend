@@ -9,8 +9,8 @@ export interface State {
   nendoList: NendoMasterEntity[];
   kamokuList: KamokuMasterEntity[];
   saimokuList: SaimokuMasterEntity[];
-  ledgerList: LedgerSearchResponse[];
-  journalList: JournalEntity[];
+  ledgerList: { all_count: number; list: LedgerSearchResponse[] };
+  journalList: { all_count: number; list: JournalEntity[] };
   tmpLedgerCd: string;
   summary: SummaryResponse;
 }
@@ -20,8 +20,8 @@ export const getInitialState = (): State => {
     nendoList: [],
     kamokuList: [],
     saimokuList: [],
-    ledgerList: [],
-    journalList: [],
+    ledgerList: { all_count: 0, list: [] },
+    journalList: { all_count: 0, list: [] },
     tmpLedgerCd: "",
     summary: {
       sales: 0,

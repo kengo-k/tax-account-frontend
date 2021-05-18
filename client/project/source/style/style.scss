@@ -126,6 +126,25 @@
     margin-left: 10px;
   }
 }
+.pageSummary {
+  display: inline-block;
+  width: 150px;
+}
+.pageList {
+  display: inline-block;
+  margin-left: 20px;
+  width: 500px;
+  text-align: center;
+  .pageNo {
+    display: inline-block;
+    width: 20px;
+  }
+  .clickable {
+    color: purple;
+    text-decoration: underline;
+    cursor: pointer;
+  }
+}
 
 .num {
   text-align: right;
