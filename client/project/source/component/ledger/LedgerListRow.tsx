@@ -18,6 +18,7 @@ import {
   toNumber,
   filterSaimokuList,
   createReloadLedger,
+  getTargetYYYYMM,
 } from "@component/ledger/LedgerList";
 
 export const LedgerListRow = (props: {
@@ -121,7 +122,7 @@ export const LedgerListRow = (props: {
     }
 
     if (
-      props.ledgerMonth != null &&
+      props.ledgerMonth !== "all" &&
       dateStr.substr(4, 2) !== props.ledgerMonth
     ) {
       props.setError("date_month_range", {
@@ -322,10 +323,7 @@ export const LedgerListRow = (props: {
           <>
             <input
               type="text"
-              value={`${DateTime.fromFormat(
-                props.ledger.date,
-                "yyyymmdd"
-              ).toFormat("yyyy/mm/")}`}
+              value={getTargetYYYYMM(props.ledger.date)}
               maxLength={6}
               readOnly
               disabled

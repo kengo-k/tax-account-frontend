@@ -282,9 +282,6 @@ export const Header = (props: HeaderParams) => {
                   >
                     {[
                       "all",
-                      "01",
-                      "02",
-                      "03",
                       "04",
                       "05",
                       "06",
@@ -294,6 +291,9 @@ export const Header = (props: HeaderParams) => {
                       "10",
                       "11",
                       "12",
+                      "01",
+                      "02",
+                      "03",
                     ].map((m) => {
                       //const value = m !== "" ? Numeral(m).format("00") : "";
                       return <option value={m}>{m === "all" ? "" : m}</option>;
