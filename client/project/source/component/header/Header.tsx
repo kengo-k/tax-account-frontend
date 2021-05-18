@@ -88,7 +88,7 @@ export const Header = (props: HeaderParams) => {
     } else {
       setSummary({ sales: 0, expenses: 0, tax: undefined });
     }
-  }, [props.nendo]);
+  }, [props.nendo, state.journalList, state.ledgerList]);
 
   React.useEffect(() => {
     if (props.journalsOrder != null) {
