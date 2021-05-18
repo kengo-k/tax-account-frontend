@@ -134,7 +134,7 @@ export const Main = () => {
   };
 
   return (
-    <div>
+    <div className="main">
       <BrowserRouter>
         <Switch>
           <Route

@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useSelector } from "typeless";
 import flatmap from "lodash.flatmap";
 import { DateTime } from "luxon";
 import Numeral from "numeral";
@@ -16,6 +17,7 @@ import { SaimokuMasterEntity } from "@common/model/master/SaimokuMasterEntity";
 import { useHistory } from "react-router";
 import { LedgerSearchRequest } from "@common/model/journal/LedgerSearchRequest";
 import { getPageList } from "@component/misc";
+import { selectSaimokuMap } from "@module/selector/selectSaimokuMap";
 
 export const LedgerList = (props: {
   nendo: string;
@@ -27,6 +29,7 @@ export const LedgerList = (props: {
   const history = useHistory();
   const { loadLedger } = useActions();
   const state = useState();
+  const saimokuMap = useSelector(selectSaimokuMap);
 
   const [errors, setErrors] = React.useState(
     new Map() as LedgerListInputErrors
@@ -55,7 +58,12 @@ export const LedgerList = (props: {
     props.pageSize
   );
   return (
-    <div>
+    <div className="ledgerList">
+      <h1 className="subTitle">
+        台帳:
+        {saimokuMap.get(props.ledgerCd)?.saimoku_full_name}
+        {props.ledgerMonth !== "all" ? ` - ${props.ledgerMonth}月分 ` : ""}
+      </h1>
       <LedgerListError errors={errors} />
       <div>
         <span className="pageSummary">

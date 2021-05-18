@@ -85,10 +85,18 @@ export const getPageList = (
       pageList.push(i);
     }
   }
+  const from = (pageNo - 1) * pageSize + 1;
+  const to =
+    pageNo === pageCount
+      ? allCount
+      : pageNo * pageSize > allCount
+      ? allCount
+      : pageNo * pageSize;
+
   return {
     pageCount,
     pageList,
-    from: (pageNo - 1) * pageSize + 1,
-    to: pageNo === pageCount ? allCount : pageNo * pageSize,
+    from: allCount > 0 ? from : 0,
+    to: allCount > 0 ? to : 0,
   };
 };

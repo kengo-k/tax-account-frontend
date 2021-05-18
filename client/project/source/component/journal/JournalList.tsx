@@ -44,7 +44,8 @@ export const JournalList = (props: {
     props.pageSize
   );
   return (
-    <div>
+    <div className="journalList">
+      <h1 className="subTitle">仕訳一覧</h1>
       <div>
         <span className="pageSummary">
           {`${pageInfo.from}-${pageInfo.to}`}件(全
