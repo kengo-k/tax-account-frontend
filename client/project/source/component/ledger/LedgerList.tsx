@@ -13,32 +13,76 @@ import {
 } from "@component/ledger/LedgerListError";
 import { LedgerSearchResponse } from "@common/model/journal/LedgerSearchResponse";
 import { SaimokuMasterEntity } from "@common/model/master/SaimokuMasterEntity";
-import { Context, IContext } from "@component/Main";
+import { useHistory } from "react-router";
+import { LedgerSearchRequest } from "@common/model/journal/LedgerSearchRequest";
+import { getPageList } from "@component/misc";
 
-export const LedgerList = (props: { nendo: string; ledgerCd: string }) => {
+export const LedgerList = (props: {
+  nendo: string;
+  ledgerCd: string;
+  ledgerMonth?: string;
+  pageNo: number;
+  pageSize: number;
+}) => {
+  const history = useHistory();
   const { loadLedger } = useActions();
-  const context = React.useContext(Context);
   const state = useState();
+
   const [errors, setErrors] = React.useState(
     new Map() as LedgerListInputErrors
   );
 
   React.useEffect(() => {
-    loadLedger({
-      nendo: props.nendo,
-      ledger_cd: props.ledgerCd,
-      month: context.ledgerMonth,
-    });
-  }, [props, context.ledgerMonth]);
+    loadLedger(
+      new LedgerSearchRequest({
+        nendo: props.nendo,
+        ledger_cd: props.ledgerCd,
+        month: props.ledgerMonth,
+        page_no: props.pageNo,
+        page_size: props.pageSize,
+      })
+    );
+  }, [props]);
 
   const ledgerListRows: (
     | { isNewRow: true; journal_id: number }
     | LedgerSearchResponse
-  )[] = [{ isNewRow: true, journal_id: -1 }, ...state.ledgerList];
+  )[] = [{ isNewRow: true, journal_id: -1 }, ...state.ledgerList.list];
 
+  const pageInfo = getPageList(
+    props.pageNo,
+    state.ledgerList.all_count,
+    props.pageSize
+  );
   return (
     <div>
       <LedgerListError errors={errors} />
+      <div>
+        <span className="pageSummary">
+          {`${pageInfo.from}-${pageInfo.to}`}件(全
+          {state.ledgerList.all_count ?? "0"}件)
+        </span>
+        <span className="pageList">
+          {pageInfo.pageList.map((pageNo) =>
+            pageNo === props.pageNo ? (
+              <a className="pageNo">{pageNo}</a>
+            ) : (
+              <a
+                onClick={() => {
+                  const url = new URL(location.href);
+                  url.searchParams.set("page_no", `${pageNo}`);
+                  history.push(`${url.pathname}${url.search}`);
+                }}
+                className={`pageNo ${
+                  pageNo !== props.pageNo ? "clickable" : ""
+                }`}
+              >
+                {pageNo}
+              </a>
+            )
+          )}
+        </span>
+      </div>
       <div className="ledgerList">
         <table>
           <thead className="ledgerHeader">
@@ -86,6 +130,11 @@ export const LedgerList = (props: { nendo: string; ledgerCd: string }) => {
                 return (
                   <LedgerListNewRow
                     key={row.journal_id}
+                    nendo={props.nendo}
+                    ledgerCd={props.ledgerCd}
+                    ledgerMonth={props.ledgerMonth}
+                    pageNo={props.pageNo}
+                    pageSize={props.pageSize}
                     error={error}
                     setError={setError}
                     notifyError={notifyError}
@@ -95,6 +144,11 @@ export const LedgerList = (props: { nendo: string; ledgerCd: string }) => {
                 return (
                   <LedgerListRow
                     key={row.journal_id}
+                    nendo={props.nendo}
+                    ledgerCd={props.ledgerCd}
+                    ledgerMonth={props.ledgerMonth}
+                    pageNo={props.pageNo}
+                    pageSize={props.pageSize}
                     ledger={row}
                     error={error}
                     setError={setError}
@@ -150,20 +204,31 @@ export const filterSaimokuList = (
 // 更新後に必要な処理
 // 金額等を更新すると累計金額が全体的に変更されるため全データを取り直す必要がある。
 export const createReloadLedger =
-  (context: IContext) => (needClear?: boolean) => {
+  (
+    nendo: string,
+    ledgerCd: string,
+    ledgerMonth: string | undefined,
+    pageNo: number,
+    pageSize: number
+  ) =>
+  (needClear?: boolean) => {
     const ret = [];
     if (needClear) {
       // 日付を変更する場合、データの並び順が変わってしまうがその場合、
       // 再描画で行が重複してしまう(※原因要調査)ため事前にクリア処理をする。
       // ただしクリアするとフォーカスを失う模様。
-      ret.push(actions.setLedger([]));
+      ret.push(actions.setLedger({ all_count: 0, list: [] }));
     }
     ret.push(
-      actions.loadLedger({
-        nendo: context.nendo,
-        ledger_cd: context.ledgerCd,
-        month: context.ledgerMonth,
-      })
+      actions.loadLedger(
+        new LedgerSearchRequest({
+          nendo: nendo,
+          ledger_cd: ledgerCd,
+          month: ledgerMonth,
+          page_no: pageNo,
+          page_size: pageSize,
+        })
+      )
     );
     return ret;
   };

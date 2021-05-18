@@ -4,33 +4,73 @@ import { DateTime } from "luxon";
 import Numeral from "numeral";
 import { useActions, useState } from "@module/action";
 import { selectSaimokuMap } from "@module/selector/selectSaimokuMap";
-import { Context } from "@component/Main";
 import {
   IJournalSearchRequest,
   JournalSearchRequest,
 } from "@common/model/journal/JournalSearchRequest";
+import { getPageList } from "@component/misc";
+import { useHistory } from "react-router";
 
-export const JournalList = (props: { nendo: string }) => {
+export const JournalList = (props: {
+  nendo: string;
+  journalsOrder?: string;
+  pageNo: number;
+  pageSize: number;
+}) => {
+  const history = useHistory();
   const { loadJournals } = useActions();
   const { journalList } = useState();
   const saimokuMap = useSelector(selectSaimokuMap);
-  const context = React.useContext(Context);
 
   React.useEffect(() => {
     const request: Partial<IJournalSearchRequest> = { nendo: props.nendo };
-    if (context.journalsOrder != null) {
-      if (context.journalsOrder === "1") {
+    if (props.journalsOrder != null) {
+      if (props.journalsOrder === "1") {
         request.latest_order = true;
-      } else if (context.journalsOrder === "2") {
+      } else if (props.journalsOrder === "2") {
         request.largest_order = true;
-      } else if (context.journalsOrder === "3") {
+      } else if (props.journalsOrder === "3") {
         request.largest_order = false;
       }
     }
+    request.page_no = props.pageNo;
+    request.page_size = props.pageSize;
     loadJournals(new JournalSearchRequest(request));
-  }, [props.nendo, context.journalsOrder]);
+  }, [props]);
+
+  const pageInfo = getPageList(
+    props.pageNo,
+    journalList.all_count,
+    props.pageSize
+  );
   return (
     <div>
+      <div>
+        <span className="pageSummary">
+          {`${pageInfo.from}-${pageInfo.to}`}件(全
+          {journalList.all_count ?? "0"}件)
+        </span>
+        <span className="pageList">
+          {pageInfo.pageList.map((pageNo) =>
+            pageNo === props.pageNo ? (
+              <a className="pageNo">{pageNo}</a>
+            ) : (
+              <a
+                onClick={() => {
+                  const url = new URL(location.href);
+                  url.searchParams.set("page_no", `${pageNo}`);
+                  history.push(`${url.pathname}${url.search}`);
+                }}
+                className={`pageNo ${
+                  pageNo !== props.pageNo ? "clickable" : ""
+                }`}
+              >
+                {pageNo}
+              </a>
+            )
+          )}
+        </span>
+      </div>
       <table>
         <thead className="journalHeader">
           <th>日付</th>
@@ -42,7 +82,7 @@ export const JournalList = (props: { nendo: string }) => {
           <th>更新日時</th>
         </thead>
         <tbody className="journalBody">
-          {journalList.map((j) => {
+          {journalList.list.map((j) => {
             return (
               <tr key={j.id}>
                 <td className="journalBody-date">

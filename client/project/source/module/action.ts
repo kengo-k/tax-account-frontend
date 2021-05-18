@@ -34,13 +34,19 @@ const [module, actions, state] = createModule(moduleSymbol)
     loadLedger: (ledgerSearchRequest: LedgerSearchRequest) => ({
       payload: { ledgerSearchRequest },
     }),
-    setLedger: (ledgerList: LedgerSearchResponse[]) => ({
+    setLedger: (ledgerList: {
+      all_count: number;
+      list: LedgerSearchResponse[];
+    }) => ({
       payload: { ledgerList },
     }),
     loadJournals: (journalSearchRequest: JournalSearchRequest) => ({
       payload: { journalSearchRequest },
     }),
-    setJournals: (journalList: JournalEntity[]) => ({
+    setJournals: (journalList: {
+      all_count: number;
+      list: JournalEntity[];
+    }) => ({
       payload: { journalList },
     }),
     updateJournal: (
@@ -86,6 +92,8 @@ module
     return Rx.fromPromise(
       PresentationApi.selectLedger(ledgerSearchRequest, {
         month: ledgerSearchRequest.month,
+        page_no: ledgerSearchRequest.page_no,
+        page_size: ledgerSearchRequest.page_size,
       })
     ).pipe(
       Rx.map((res) => {
@@ -98,6 +106,8 @@ module
       PresentationApi.selectJournal(journalSearchRequest, {
         latest_order: journalSearchRequest.latest_order,
         largest_order: journalSearchRequest.largest_order,
+        page_no: journalSearchRequest.page_no,
+        page_size: journalSearchRequest.page_size,
       })
     ).pipe(
       Rx.map((res) => {

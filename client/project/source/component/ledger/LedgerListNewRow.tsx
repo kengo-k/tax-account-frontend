@@ -9,7 +9,6 @@ import {
   LedgerListInputErrorItem,
   SetLedgerListInputError,
 } from "@component/ledger/LedgerListError";
-import { Context } from "@component/Main";
 import { SaimokuMasterEntity } from "@common/model/master/SaimokuMasterEntity";
 import {
   toNumber,
@@ -19,6 +18,11 @@ import {
 } from "@component/ledger/LedgerList";
 
 export const LedgerListNewRow = (props: {
+  nendo: string;
+  ledgerCd: string;
+  ledgerMonth?: string;
+  pageNo: number;
+  pageSize: number;
   error: Readonly<LedgerListInputErrorItem>;
   setError: SetLedgerListInputError;
   notifyError: () => void;
@@ -42,8 +46,13 @@ export const LedgerListNewRow = (props: {
   const kariRef = React.createRef<HTMLInputElement>();
   const kasiRef = React.createRef<HTMLInputElement>();
 
-  const context = React.useContext(Context);
-  const reloadLedger = createReloadLedger(context);
+  const reloadLedger = createReloadLedger(
+    props.nendo,
+    props.ledgerCd,
+    props.ledgerMonth,
+    props.pageNo,
+    props.pageSize
+  );
 
   const updateDate = (dateStr: string) => {
     props.setError("date_required", { hasError: false });
@@ -72,7 +81,7 @@ export const LedgerListNewRow = (props: {
     }
 
     const rawDate = toRawDate(dateStr);
-    const nendoMaster = nendoMap.get(context.nendo);
+    const nendoMaster = nendoMap.get(props.nendo);
     const isDateInNendoRange = (d: string) => {
       if (nendoMaster == null) {
         return false;
@@ -95,8 +104,8 @@ export const LedgerListNewRow = (props: {
     }
 
     if (
-      context.ledgerMonth != null &&
-      rawDate.substr(4, 2) !== context.ledgerMonth
+      props.ledgerMonth != null &&
+      rawDate.substr(4, 2) !== props.ledgerMonth
     ) {
       props.setError("date_month_range", {
         hasError: true,
@@ -224,8 +233,8 @@ export const LedgerListNewRow = (props: {
 
   const save = () => {
     let date;
-    if (context.ledgerMonth != null) {
-      date = `${context.nendo}${context.ledgerMonth}${dateStrDD}`;
+    if (props.ledgerMonth != null) {
+      date = `${props.nendo}${props.ledgerMonth}${dateStrDD}`;
     } else {
       date = dateStr;
     }
@@ -238,9 +247,9 @@ export const LedgerListNewRow = (props: {
     if (validateResutls.every((valid) => valid)) {
       createLedger(
         {
-          nendo: context.nendo,
+          nendo: props.nendo,
           date: toRawDate(date),
-          ledger_cd: context.ledgerCd,
+          ledger_cd: props.ledgerCd,
           other_cd: cd,
           karikata_value: toNumber(kariValueStr),
           kasikata_value: toNumber(kasiValueStr),
@@ -267,11 +276,11 @@ export const LedgerListNewRow = (props: {
   return (
     <tr>
       <td className="ledgerBody-date">
-        {context.ledgerMonth != null ? (
+        {props.ledgerMonth !== "all" ? (
           <>
             <input
               type="text"
-              value={`${context.nendo}/${context.ledgerMonth}/`}
+              value={`${props.nendo}/${props.ledgerMonth}/`}
               maxLength={6}
               readOnly
               disabled
