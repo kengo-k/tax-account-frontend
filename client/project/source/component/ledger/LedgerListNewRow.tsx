@@ -44,6 +44,7 @@ export const LedgerListNewRow = (props: {
     [] as SaimokuMasterEntity[]
   );
 
+  const dateRef = React.createRef<HTMLInputElement>();
   const kariRef = React.createRef<HTMLInputElement>();
   const kasiRef = React.createRef<HTMLInputElement>();
 
@@ -260,6 +261,7 @@ export const LedgerListNewRow = (props: {
         },
         reloadLedger(false)
       );
+      dateRef.current?.focus();
       setDate("");
       setDateDD("");
       setCd("");
@@ -307,6 +309,7 @@ export const LedgerListNewRow = (props: {
                   ? "error"
                   : ""
               }`}
+              ref={dateRef}
             />
           </>
         ) : (
@@ -344,6 +347,7 @@ export const LedgerListNewRow = (props: {
                 ? "error"
                 : ""
             }`}
+            ref={dateRef}
           />
         )}
       </td>
