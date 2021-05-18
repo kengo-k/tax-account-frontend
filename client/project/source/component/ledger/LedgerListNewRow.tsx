@@ -15,6 +15,7 @@ import {
   toRawDate,
   filterSaimokuList,
   createReloadLedger,
+  getTargetYYYYMM,
 } from "@component/ledger/LedgerList";
 
 export const LedgerListNewRow = (props: {
@@ -104,7 +105,7 @@ export const LedgerListNewRow = (props: {
     }
 
     if (
-      props.ledgerMonth != null &&
+      props.ledgerMonth !== "all" &&
       rawDate.substr(4, 2) !== props.ledgerMonth
     ) {
       props.setError("date_month_range", {
@@ -233,8 +234,10 @@ export const LedgerListNewRow = (props: {
 
   const save = () => {
     let date;
-    if (props.ledgerMonth != null) {
-      date = `${props.nendo}${props.ledgerMonth}${dateStrDD}`;
+    if (props.ledgerMonth !== "all") {
+      date = `${getTargetYYYYMM(
+        `${props.nendo}${props.ledgerMonth}01`
+      )}/${dateStrDD}`;
     } else {
       date = dateStr;
     }
@@ -280,7 +283,8 @@ export const LedgerListNewRow = (props: {
           <>
             <input
               type="text"
-              value={`${props.nendo}/${props.ledgerMonth}/`}
+              //value={`${props.nendo}/${props.ledgerMonth}/`}
+              value={getTargetYYYYMM(`${props.nendo}${props.ledgerMonth}01`)}
               maxLength={6}
               readOnly
               disabled

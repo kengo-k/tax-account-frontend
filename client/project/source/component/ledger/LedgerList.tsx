@@ -232,3 +232,13 @@ export const createReloadLedger =
     );
     return ret;
   };
+
+export const getTargetYYYYMM = (dateStr: string) => {
+  const date = DateTime.fromFormat(dateStr, "yyyymmdd");
+  let nendoStr = date.toFormat("yyyy");
+  const mmStr = date.toFormat("mm");
+  if ([1, 2, 3].includes(Number(mmStr))) {
+    nendoStr = `${Number(nendoStr) + 1}`;
+  }
+  return `${nendoStr}/${mmStr}`;
+};
