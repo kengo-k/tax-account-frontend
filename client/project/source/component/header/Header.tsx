@@ -236,6 +236,7 @@ export const Header = (props: HeaderParams) => {
                   showLedger: true,
                   journalsOrder: undefined,
                   ledgerMonth: undefined,
+                  pageNo: 1,
                 })
               );
             }}
