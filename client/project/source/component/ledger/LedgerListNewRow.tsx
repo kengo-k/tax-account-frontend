@@ -43,6 +43,7 @@ export const LedgerListNewRow = (props: {
   const [filterdSaimokuList, setFilterdSaimokuList] = React.useState(
     [] as SaimokuMasterEntity[]
   );
+  const [note, setNote] = React.useState("");
 
   const dateRef = React.createRef<HTMLInputElement>();
   const kariRef = React.createRef<HTMLInputElement>();
@@ -257,7 +258,7 @@ export const LedgerListNewRow = (props: {
           other_cd: cd,
           karikata_value: toNumber(kariValueStr),
           kasikata_value: toNumber(kasiValueStr),
-          note: undefined,
+          note,
         },
         reloadLedger(false)
       );
@@ -268,6 +269,7 @@ export const LedgerListNewRow = (props: {
       setCdName("");
       setKariValue("");
       setKasiValue("");
+      setNote("");
     } else {
       props.notifyError();
     }
@@ -483,7 +485,21 @@ export const LedgerListNewRow = (props: {
         />
       </td>
       <td className="ledgerBody-note">
-        <input type="text" />
+        <input
+          type="text"
+          value={note}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+            setNote(e.target.value);
+          }}
+          onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+            if (e.key === "Enter") {
+              save();
+            }
+          }}
+          onBlur={(e: React.ChangeEvent<HTMLInputElement>) => {
+            save();
+          }}
+        />
       </td>
       <td>
         <br />

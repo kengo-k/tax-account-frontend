@@ -45,7 +45,7 @@ export const getPageList = (
     pageNo = pageCount;
   }
   let diff = 0;
-  let pageList = [];
+  let pageList = [] as number[];
   if (pageCount > pageRange) {
     pageList.push(pageNo);
     for (let i = pageNo - 1; i >= pageNo - 4; i--) {

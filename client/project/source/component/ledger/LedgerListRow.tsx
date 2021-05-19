@@ -49,6 +49,7 @@ export const LedgerListRow = (props: {
   const [filterdSaimokuList, setFilterdSaimokuList] = React.useState(
     [] as SaimokuMasterEntity[]
   );
+  const [note, setNote] = React.useState(props.ledger.note);
 
   const kariRef = React.createRef<HTMLInputElement>();
   const kasiRef = React.createRef<HTMLInputElement>();
@@ -67,6 +68,10 @@ export const LedgerListRow = (props: {
       { date: dateStr },
       reloadLedger(true)
     );
+  }, 1500);
+
+  const updateNoteDebounced = useDebouncedCallback((note: string) => {
+    updateJournal(props.ledger.journal_id, { note });
   }, 1500);
 
   const updateLedgerDebounced = useDebouncedCallback(
@@ -495,7 +500,14 @@ export const LedgerListRow = (props: {
         />
       </td>
       <td className="ledgerBody-note">
-        <input type="text" />
+        <input
+          type="text"
+          value={note}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+            setNote(e.target.value);
+            updateNoteDebounced(e.target.value);
+          }}
+        />
       </td>
       <td className="ledgerBody-acc">
         <input
