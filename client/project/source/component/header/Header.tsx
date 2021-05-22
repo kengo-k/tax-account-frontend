@@ -249,7 +249,7 @@ export const Header = (props: HeaderParams) => {
             {state.saimokuList.map((s) => {
               return (
                 <option key={s.saimoku_cd} value={s.saimoku_cd}>
-                  {s.saimoku_ryaku_name}
+                  {s.saimoku_cd}: {s.saimoku_full_name}
                 </option>
               );
             })}
