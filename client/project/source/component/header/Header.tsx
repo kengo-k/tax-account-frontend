@@ -14,7 +14,8 @@ export interface HeaderParams {
 
 export const Header = (props: HeaderParams) => {
   // load initial data
-  const { loadInit, loadSummary, setSummary, setTmpLedgerCd } = useActions();
+  const { loadInit, loadSummary, setSummary, setTmpLedgerCd, setLedger } =
+    useActions();
   const state = useState();
 
   const [journalChecked, setJournalChecked] = React.useState(props.showJournal);
@@ -226,6 +227,7 @@ export const Header = (props: HeaderParams) => {
           <select
             value={state.tmpLedgerCd}
             onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
+              setLedger({ all_count: 0, list: [] });
               setLedgerCd(e.target.value);
               setTmpLedgerCd(e.target.value);
               history.push(
