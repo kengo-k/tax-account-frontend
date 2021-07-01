@@ -168,6 +168,32 @@ export const LedgerList = (props: {
           </tbody>
         </table>
       </div>
+      <ul>
+        <li>
+          <input type="checkbox" checked={true} />
+          前年度の繰越しを入力(現金預金・売掛金・貸付金/未払税・預り金)
+        </li>
+        <li>
+          <input type="checkbox" checked={true} />
+          年度末の預金の残高が一致することを確認
+        </li>
+        <li>
+          <input type="checkbox" checked={true} />
+          年度末の売掛金の残高が一致することを確認
+        </li>
+        <li>
+          <input type="checkbox" checked={false} />
+          未払給与の相殺
+        </li>
+        <li>
+          <input type="checkbox" checked={false} />
+          未払経費の相殺
+        </li>
+        <li>
+          <input type="checkbox" checked={false} />
+          源泉所得税が1-3月分のみ残っていることを確認
+        </li>
+      </ul>
     </div>
   );
 };

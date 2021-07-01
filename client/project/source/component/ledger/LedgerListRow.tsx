@@ -269,18 +269,30 @@ export const LedgerListRow = (props: {
       });
       return;
     }
-    let paramCd = otherCd;
+    let paramCd;
     if (saimokuMap.has(otherCd)) {
-      setCd(otherCd);
-      setCdName(saimokuMap.get(otherCd)!.saimoku_ryaku_name);
+      paramCd = otherCd;
+      //setCd(otherCd);
+      //setCdName(saimokuMap.get(otherCd)!.saimoku_ryaku_name);
     } else if (filterdSaimokuList.length === 1) {
-      setCd(filterdSaimokuList[0].saimoku_cd);
-      setCdName(filterdSaimokuList[0].saimoku_ryaku_name);
       paramCd = filterdSaimokuList[0].saimoku_cd;
+      //setCd(filterdSaimokuList[0].saimoku_cd);
+      //setCdName(filterdSaimokuList[0].saimoku_ryaku_name);
+      //paramCd = filterdSaimokuList[0].saimoku_cd;
     } else {
       setCd("");
       return;
     }
+    if (paramCd === props.ledgerCd) {
+      props.setError("cd_invalid", {
+        hasError: true,
+        message: `相手科目コードが正しくありません: ${paramCd}`,
+        targetId: ["another_cd"],
+      });
+      return;
+    }
+    setCd(paramCd);
+    setCdName(saimokuMap.get(paramCd)!.saimoku_ryaku_name);
     updateLedgerDebounced({
       id: props.ledger.journal_id,
       ledger_cd: props.ledgerCd,
@@ -328,7 +340,7 @@ export const LedgerListRow = (props: {
           <>
             <input
               type="text"
-              value={getTargetYYYYMM(props.ledger.date)}
+              value={getTargetYYYYMM(`${props.nendo}${props.ledgerMonth}01`)}
               maxLength={6}
               readOnly
               disabled

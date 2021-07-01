@@ -81,7 +81,7 @@
     width: 100px;
   }
   &-note {
-    min-width: 100px;
+    width: 200px;
   }
 }
 
@@ -129,6 +129,16 @@
       width: 100%;
     }
   }
+  &-note {
+    input {
+      width: 250px;
+    }
+  }
+  &-acc {
+    input {
+      width: 90px;
+    }
+  }
 }
 
 .ledgerListError {
@@ -169,4 +179,152 @@
 
 .error {
   background-color: pink;
+}
+
+.pl {
+  text-align: center;
+  width: 1000px;
+  height: 1550px;
+  table {
+    .row1 {
+      width: 380px;
+    }
+    .row2-1 {
+      width: 270px;
+    }
+    .row2-2 {
+      width: 270px;
+    }
+    thead {
+      tr {
+        height: 40px;
+      }
+      th {
+        border: 3px solid black;
+      }
+    }
+    tbody {
+      tr {
+        height: 43px;
+      }
+      th {
+        padding: 0 10px 0 10px;
+        text-align-last: justify;
+      }
+      th,
+      td {
+        font-weight: normal;
+        text-align: right;
+        letter-spacing: 3px;
+      }
+      th {
+        border-right: 3px solid black;
+      }
+      td {
+        border-right: 1px solid black;
+      }
+      .sep {
+        border-bottom: 1px solid black;
+      }
+      .emp {
+        letter-spacing: 5px;
+        font-weight: bold;
+      }
+    }
+    border: 3px solid black;
+    border-collapse: collapse;
+  }
+}
+
+.tax_detail {
+  table {
+    margin-left: 20px;
+  }
+  th {
+    text-align: left;
+    width: 200px;
+  }
+  .itemNo {
+    display: inline-block;
+    background-color: cadetblue;
+    color: white;
+    padding: 2px 5px 2px 5px;
+    margin-right: 5px;
+  }
+  .fixed {
+    text-decoration: underline red 5px;
+  }
+  .totalTax {
+    // width: 300px;
+    //border: 3px solid black;
+    padding: 30px 30px 30px 10px;
+    font-size: 30px;
+  }
+}
+
+.bs {
+  text-align: center;
+  width: 1000px;
+  height: 1550px;
+  margin-left: 25px;
+  .part {
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      border-style: solid;
+      border-color: black;
+      border-width: 3px;
+      tbody {
+        .level1 {
+          font-weight: bold;
+          padding-left: 10px;
+        }
+        .level2 {
+          font-weight: bold;
+          padding-left: 20px;
+        }
+        .sum {
+          border-top: 2px solid black;
+          border-bottom: 2px solid black;
+          th {
+            padding: 0 40px 0 40px;
+            font-weight: bold;
+          }
+        }
+        th,
+        td {
+          padding: 0 10px 0 10px;
+        }
+        th {
+          border-right: 1px solid black;
+          text-align-last: justify;
+          font-weight: normal;
+          padding-left: 30px;
+        }
+        td {
+          text-align: right;
+        }
+      }
+      tr {
+        height: 34px;
+      }
+    }
+    .row1 {
+      width: 50%;
+      border-right: 1px solid black;
+      border-bottom: 3px solid black;
+    }
+    .row2 {
+      width: 50%;
+      border-bottom: 3px solid black;
+    }
+    width: 490px;
+    vertical-align: top;
+    display: inline-block;
+  }
+  .left {
+    table {
+      border-right: none;
+    }
+  }
 }

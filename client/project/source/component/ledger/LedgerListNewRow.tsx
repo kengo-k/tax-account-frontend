@@ -231,6 +231,14 @@ export const LedgerListNewRow = (props: {
       });
       return false;
     }
+    if (otherCd === props.ledgerCd) {
+      props.setError("cd_invalid", {
+        hasError: true,
+        message: `相手科目コードが正しくありません: ${otherCd}`,
+        targetId: ["another_cd"],
+      });
+      return false;
+    }
     return true;
   };
 

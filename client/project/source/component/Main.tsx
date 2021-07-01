@@ -9,6 +9,9 @@ import {
 import { Header, HeaderParams } from "@component/header/Header";
 import { JournalList } from "@component/journal/JournalList";
 import { LedgerList } from "@component/ledger/LedgerList";
+import { PL } from "@component/pl/PL";
+import { BS } from "@component/bs/BS";
+import { TaxDetail } from "@component/tax/TaxDetail";
 import { updateState, getRestoreValue } from "@component/misc";
 
 const useQuery = () => {
@@ -356,6 +359,48 @@ export const Main = () => {
                 </>
                 // </Context.Provider>
               );
+            }}
+          />
+          <Route
+            exact
+            path="/:nendo/tax/detail"
+            render={(
+              routeProps: RouteComponentProps<{
+                nendo: string;
+              }>
+            ) => {
+              const p = routeProps.match.params;
+              const nendo = p.nendo;
+              const params = createHeaderParams({ nendo });
+              return <TaxDetail nendo={nendo} />;
+            }}
+          />
+          <Route
+            exact
+            path="/:nendo/pl"
+            render={(
+              routeProps: RouteComponentProps<{
+                nendo: string;
+              }>
+            ) => {
+              const p = routeProps.match.params;
+              const nendo = p.nendo;
+              const params = createHeaderParams({ nendo });
+              return <PL nendo={nendo} />;
+            }}
+          />
+          <Route
+            exact
+            path="/:nendo/bs"
+            render={(
+              routeProps: RouteComponentProps<{
+                nendo: string;
+              }>
+            ) => {
+              const p = routeProps.match.params;
+              const nendo = p.nendo;
+              const params = createHeaderParams({ nendo });
+              return <BS nendo={nendo} />;
             }}
           />
         </Switch>
