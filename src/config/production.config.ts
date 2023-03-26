@@ -1,4 +1,4 @@
-import { Config } from "@config/Config";
+import { Config } from "src/config/Config";
 
 export const config: Config = {
   apiRoot: "account_api",

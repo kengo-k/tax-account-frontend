@@ -1,5 +1,5 @@
 import { createSelector } from "typeless";
-import { state as getState } from "@module/action";
+import { state as getState } from "src/module/action";
 import { NendoMasterEntity } from "@common/model/master/NendoMasterEntity";
 
 export const selectNendoMap = createSelector(

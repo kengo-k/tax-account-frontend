@@ -14,7 +14,7 @@
     "emitDecoratorMetadata": true,
     "lib": ["es6", "dom"],
     "paths": {
-      "@*": ["source/*"]
+      "@*": ["src/*"]
     }
   }
 }

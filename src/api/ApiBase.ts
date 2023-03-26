@@ -1,5 +1,5 @@
 import axios from "axios";
-import { getConfig } from "@config/Config";
+import { getConfig } from "src/config/Config";
 
 const config = getConfig();
 function getClient() {

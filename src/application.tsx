@@ -1,6 +1,6 @@
 import * as React from "react";
-import { useModule } from "@module/action";
-import { Main } from "@component/Main";
+import { useModule } from "src/module/action";
+import { Main } from "src/component/Main";
 
 export const Application = () => {
   useModule();
