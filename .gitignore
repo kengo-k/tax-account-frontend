@@ -1,4 +1,4 @@
-client/project/node_modules
-client/project/public/*.json
-client/project/public/js/*
-client/project/public/style/*
+public/*.json
+public/js/*
+public/style/*
+node_modules
