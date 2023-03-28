@@ -3,7 +3,7 @@ const webpack = require("webpack");
 
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 
-const sourcePath = path.resolve(__dirname, "./source");
+const sourcePath = path.resolve(__dirname, "./src");
 const outputPath = path.resolve(__dirname, "./public");
 const htmlContentPath = path.resolve(__dirname, "./public");
 
