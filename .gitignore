@@ -1,1 +1,4 @@
+public/*.json
+public/js/*
+public/style/*
 node_modules
