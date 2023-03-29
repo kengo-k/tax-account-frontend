@@ -2,13 +2,13 @@ import * as React from "react";
 import { useSelector } from "typeless";
 import { DateTime } from "luxon";
 import Numeral from "numeral";
-import { useActions, useState } from "src/module/action";
-import { selectSaimokuMap } from "src/module/selector/selectSaimokuMap";
-import { selectNendoMap } from "src/module/selector/selectNendoMap";
+import { useActions, useState } from "@module/action";
+import { selectSaimokuMap } from "@module/selector/selectSaimokuMap";
+import { selectNendoMap } from "@module/selector/selectNendoMap";
 import {
   LedgerListInputErrorItem,
   SetLedgerListInputError,
-} from "src/component/ledger/LedgerListError";
+} from "@component/ledger/LedgerListError";
 import { SaimokuMasterEntity } from "@common/model/master/SaimokuMasterEntity";
 import {
   toNumber,
@@ -16,7 +16,7 @@ import {
   filterSaimokuList,
   createReloadLedger,
   getTargetYYYYMM,
-} from "src/component/ledger/LedgerList";
+} from "@component/ledger/LedgerList";
 
 export const LedgerListNewRow = (props: {
   nendo: string;

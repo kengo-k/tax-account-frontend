@@ -2,13 +2,13 @@ import * as React from "react";
 import { useSelector } from "typeless";
 import { DateTime } from "luxon";
 import Numeral from "numeral";
-import { useActions, useState } from "src/module/action";
-import { selectSaimokuMap } from "src/module/selector/selectSaimokuMap";
+import { useActions, useState } from "@module/action";
+import { selectSaimokuMap } from "@module/selector/selectSaimokuMap";
 import {
   IJournalSearchRequest,
   JournalSearchRequest,
 } from "@common/model/journal/JournalSearchRequest";
-import { getPageList } from "src/component/misc";
+import { getPageList } from "@component/misc";
 import { useHistory } from "react-router";
 
 export const JournalList = (props: {

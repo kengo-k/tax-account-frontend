@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useHistory } from "react-router";
 import Numeral from "numeral";
-import { useActions, useState } from "src/module/action";
+import { useActions, useState } from "@module/action";
 
 export interface HeaderParams {
   nendo: string | undefined;

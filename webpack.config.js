@@ -39,11 +39,11 @@ module.exports = {
   resolve: {
     extensions: [".ts", ".tsx", ".js", ".json"],
     alias: {
-      "@module": path.resolve(__dirname, "source/module"),
-      "@config": path.resolve(__dirname, "source/config"),
-      "@api": path.resolve(__dirname, "source/api"),
-      "@component": path.resolve(__dirname, "source/component"),
-      "@common": path.resolve(__dirname, "source/common"),
+      "@module": path.resolve(__dirname, "src/module"),
+      "@config": path.resolve(__dirname, "src/config"),
+      "@api": path.resolve(__dirname, "src/api"),
+      "@component": path.resolve(__dirname, "src/component"),
+      "@common": path.resolve(__dirname, "src/common"),
     },
   },
   devServer: {

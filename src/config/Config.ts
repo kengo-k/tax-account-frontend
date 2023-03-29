@@ -1,5 +1,5 @@
-import { config as devConfig } from "src/config/development.config";
-import { config as prdConfig } from "src/config/production.config";
+import { config as devConfig } from "@config/development.config";
+import { config as prdConfig } from "@config/production.config";
 
 type NodeEnvType = "development" | "production";
 declare var NODE_ENV: NodeEnvType;

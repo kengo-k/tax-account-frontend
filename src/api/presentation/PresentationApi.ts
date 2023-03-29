@@ -4,7 +4,7 @@ import {
   post,
   putWithId,
   deleteWithId,
-} from "src/api/ApiBase";
+} from "@api/ApiBase";
 import { JournalEntity } from "@common/model/journal/JournalEntity";
 import { LedgerCreateRequest } from "@common/model/journal/LedgerCreateRequest";
 import { LedgerUpdateRequest } from "@common/model/journal/LedgerUpdateRequest";

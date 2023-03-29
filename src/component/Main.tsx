@@ -6,10 +6,10 @@ import {
   Switch,
   RouteComponentProps,
 } from "react-router-dom";
-import { Header, HeaderParams } from "src/component/header/Header";
-import { JournalList } from "src/component/journal/JournalList";
-import { LedgerList } from "src/component/ledger/LedgerList";
-import { updateState, getRestoreValue } from "src/component/misc";
+import { Header, HeaderParams } from "@component/header/Header";
+import { JournalList } from "@component/journal/JournalList";
+import { LedgerList } from "@component/ledger/LedgerList";
+import { updateState, getRestoreValue } from "@component/misc";
 
 const useQuery = () => {
   let query = location.search;

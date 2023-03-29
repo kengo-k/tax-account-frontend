@@ -1,7 +1,7 @@
 import * as Rx from "typeless/rx";
 import { createModule, useActions as _useActions } from "typeless";
-import { State, getInitialState } from "src/module/state";
-import { PresentationApi } from "src/api/presentation/PresentationApi";
+import { State, getInitialState } from "@module/state";
+import { PresentationApi } from "@api/presentation/PresentationApi";
 import { InitSearchResponse } from "@common/model/presentation/InitSearchResponse";
 import { LedgerSearchRequest } from "@common/model/journal/LedgerSearchRequest";
 import { LedgerSearchResponse } from "@common/model/journal/LedgerSearchResponse";

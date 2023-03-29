@@ -1,5 +1,5 @@
 import { createSelector } from "typeless";
-import { state as getState } from "src/module/action";
+import { state as getState } from "@module/action";
 import { SaimokuMasterEntity } from "@common/model/master/SaimokuMasterEntity";
 
 export const selectSaimokuMap = createSelector(
