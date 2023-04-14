@@ -1,6 +1,6 @@
 import { Config } from "@config/Config";
 
 export const config: Config = {
-  apiRoot: "account_api",
+  apiRoot: "backend",
   apiPort: 8000,
 };
