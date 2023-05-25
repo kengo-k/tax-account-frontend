@@ -2,9 +2,11 @@ import * as React from "react";
 import { History } from "history";
 import {
   BrowserRouter,
+  NavigateFunction,
   Route,
-  Switch,
-  RouteComponentProps,
+  Routes,
+  useNavigate,
+  useParams
 } from "react-router-dom";
 import { Header, HeaderParams } from "@component/header/Header";
 import { JournalList } from "@component/journal/JournalList";
@@ -39,9 +41,9 @@ const getInitialContextValue = () => {
 };
 
 const setUrl =
-  (history: History) =>
+  (history: NavigateFunction) =>
   (props: {
-    nendo: string;
+    nendo: string | undefined;
     showJournal?: boolean;
     showLedger?: boolean;
     ledgerCd?: string;
@@ -80,20 +82,8 @@ const setUrl =
     const ret = `/${url.join("/")}${
       query.length === 0 ? "" : `?${query.join("&")}`
     }`;
-    history.push(ret);
+    history(ret);
   };
-
-// export interface IContext {
-//   history: History;
-//   nendo: string;
-//   showJournal: boolean;
-//   showLedger: boolean;
-//   ledgerCd: string;
-//   journalsOrder: string | undefined;
-//   ledgerMonth: string | undefined;
-// }
-
-// export const Context = React.createContext<IContext>(getInitialContextValue());
 
 export const Main = () => {
   const [ledgerMonth, setLedgerMonth] = React.useState(
@@ -133,232 +123,162 @@ export const Main = () => {
     return newParams;
   };
 
+  const X = () => {
+    const params = createHeaderParams({});
+    return (
+      <Header {...params} />
+    );
+  };
+
+  const Y = () => {
+    const { nendo } =  useParams();
+    const params = createHeaderParams({ nendo });
+    return (
+      <Header {...params} />
+    );
+  }
+
+  const Z = () => {
+    const { nendo } = useParams();
+    const nav = useNavigate();
+    const query = useQuery();
+    let order = query.get("journals_order");
+    let pageNo = query.get("page_no");
+    let pageSize = query.get("page_size");
+
+    let isStateUpdated = false;
+    let isUrlRewriteRequired = false;
+    const setStateUpdated = () => {
+      isStateUpdated = true;
+    };
+    const setUrlRewriteRequired = () => {
+      isUrlRewriteRequired = true;
+    };
+
+    const update = updateState(setStateUpdated);
+    const get = getRestoreValue(setUrlRewriteRequired);
+
+    update(order, journalsOrder, setJournalsOrder);
+    update(pageNo, journalsPageNo, setJournalsPageNo);
+    update(pageSize, journalsPageSize, setJournalsPageSize);
+    order = get(order, journalsOrder, "0");
+    pageNo = get(pageNo, journalsPageNo, "1");
+    pageSize = get(pageSize, journalsPageSize, "10");
+    if (isUrlRewriteRequired) {
+      setUrl(nav)({
+        nendo,
+        showJournal: true,
+        pageNo: pageNo == null ? undefined : Number(pageNo),
+        pageSize: pageSize == null ? undefined : Number(pageSize),
+        journalsOrder: order,
+      });
+    }
+
+    if (isStateUpdated || isUrlRewriteRequired) {
+      return <></>;
+    }
+
+    const showJournal = true;
+    const params = createHeaderParams({
+      nendo,
+      showJournal,
+      journalsOrder,
+    });
+    return (
+      <>
+        <Header {...params} />
+        <hr />
+        <JournalList
+          nendo={nendo ?? ""}
+          journalsOrder={journalsOrder}
+          pageNo={Number(pageNo)}
+          pageSize={Number(pageSize)}
+        />
+      </>
+    );
+  }
+
+  const A = () => {
+    const { nendo } = useParams();
+    const showLedger = true;
+    const params = createHeaderParams({ nendo, showLedger });
+    return (
+      <Header {...params} />
+    );
+  }
+
+  const B = () => {
+    const { nendo, ledgerCd } = useParams();
+    const nav = useNavigate();
+    const query = useQuery();
+    let month = query.get("month");
+    let pageNo = query.get("page_no");
+    let pageSize = query.get("page_size");
+
+    let isStateUpdated = false;
+    let isUrlRewriteRequired = false;
+    const setStateUpdated = () => {
+      isStateUpdated = true;
+    };
+    const setUrlRewriteRequired = () => {
+      isUrlRewriteRequired = true;
+    };
+
+    const update = updateState(setStateUpdated);
+    const get = getRestoreValue(setUrlRewriteRequired);
+
+    update(month, ledgerMonth, setLedgerMonth);
+    update(pageNo, ledgerPageNo, setLedgerPageNo);
+    update(pageSize, ledgerPageSize, setLedgerPageSize);
+    month = get(month, ledgerMonth, "all");
+    pageNo = get(pageNo, ledgerPageNo, "1");
+    pageSize = get(pageSize, ledgerPageSize, "10");
+    if (isUrlRewriteRequired) {
+      setUrl(nav)({
+        nendo: nendo,
+        showLedger: true,
+        ledgerCd,
+        ledgerMonth: month,
+        pageNo: pageNo == null ? undefined : Number(pageNo),
+        pageSize: pageSize == null ? undefined : Number(pageSize),
+      });
+    }
+
+    if (isStateUpdated || isUrlRewriteRequired) {
+      return <></>;
+    }
+    const showLedger = true;
+    const params = createHeaderParams({
+      nendo,
+      showLedger,
+      ledgerCd,
+      ledgerMonth: month,
+    });
+    return (
+      <>
+        <Header {...params} />
+        <hr />
+        <LedgerList
+          nendo={nendo??""}
+          ledgerCd={ledgerCd??""}
+          ledgerMonth={month}
+          pageNo={Number(pageNo)}
+          pageSize={Number(pageSize)}
+        />
+      </>
+    );
+  };
+
   return (
     <div className="main">
       <BrowserRouter>
-        <Switch>
-          <Route
-            exact
-            path="/"
-            render={() => {
-              const params = createHeaderParams({});
-              return (
-                // <Context.Provider
-                //   value={Object.assign(contextValue, {
-                //     history: routeProps.history,
-                //   })}
-                // >
-                <Header {...params} />
-                // </Context.Provider>
-              );
-            }}
-          />
-          <Route
-            exact
-            path="/:nendo"
-            render={(
-              routeProps: RouteComponentProps<{
-                nendo: string;
-              }>
-            ) => {
-              const p = routeProps.match.params;
-              const nendo = p.nendo;
-              const params = createHeaderParams({ nendo });
-              return (
-                // <Context.Provider
-                //   value={Object.assign(contextValue, {
-                //     history: routeProps.history,
-                //     nendo: p.nendo,
-                //   })}
-                // >
-                <Header {...params} />
-                // </Context.Provider>
-              );
-            }}
-          />
-          <Route
-            exact
-            path="/:nendo/journal"
-            render={(
-              routeProps: RouteComponentProps<{
-                nendo: string;
-              }>
-            ) => {
-              const p = routeProps.match.params;
-              const query = useQuery();
-              let order = query.get("journals_order");
-              let pageNo = query.get("page_no");
-              let pageSize = query.get("page_size");
-
-              let isStateUpdated = false;
-              let isUrlRewriteRequired = false;
-              const setStateUpdated = () => {
-                isStateUpdated = true;
-              };
-              const setUrlRewriteRequired = () => {
-                isUrlRewriteRequired = true;
-              };
-
-              const update = updateState(setStateUpdated);
-              const get = getRestoreValue(setUrlRewriteRequired);
-
-              update(order, journalsOrder, setJournalsOrder);
-              update(pageNo, journalsPageNo, setJournalsPageNo);
-              update(pageSize, journalsPageSize, setJournalsPageSize);
-              order = get(order, journalsOrder, "0");
-              pageNo = get(pageNo, journalsPageNo, "1");
-              pageSize = get(pageSize, journalsPageSize, "10");
-              if (isUrlRewriteRequired) {
-                setUrl(routeProps.history)({
-                  nendo: p.nendo,
-                  showJournal: true,
-                  pageNo: pageNo == null ? undefined : Number(pageNo),
-                  pageSize: pageSize == null ? undefined : Number(pageSize),
-                  journalsOrder: order,
-                });
-              }
-
-              if (isStateUpdated || isUrlRewriteRequired) {
-                return <></>;
-              }
-
-              const nendo = p.nendo;
-              const showJournal = true;
-              const params = createHeaderParams({
-                nendo,
-                showJournal,
-                journalsOrder,
-              });
-              return (
-                // <Context.Provider
-                //   value={Object.assign(contextValue, {
-                //     history: routeProps.history,
-                //     nendo: p.nendo,
-                //     showJournal: true,
-                //     journalsOrder: query.get("journals_order"),
-                //   })}
-                // >
-                <>
-                  <Header {...params} />
-                  <hr />
-                  <JournalList
-                    nendo={p.nendo}
-                    journalsOrder={journalsOrder}
-                    pageNo={Number(pageNo)}
-                    pageSize={Number(pageSize)}
-                  />
-                </>
-                // </Context.Provider>
-              );
-            }}
-          />
-          <Route
-            exact
-            path="/:nendo/ledger"
-            render={(
-              routeProps: RouteComponentProps<{
-                nendo: string;
-              }>
-            ) => {
-              const p = routeProps.match.params;
-              const nendo = p.nendo;
-              const showLedger = true;
-              const params = createHeaderParams({ nendo, showLedger });
-              return (
-                // <Context.Provider
-                //   value={Object.assign(contextValue, {
-                //     history: routeProps.history,
-                //     nendo: p.nendo,
-                //     showLedger: true,
-                //   })}
-                // >
-                <Header {...params} />
-                // </Context.Provider>
-              );
-            }}
-          />
-          <Route
-            exact
-            path="/:nendo/ledger/:ledgerCd"
-            render={(
-              routeProps: RouteComponentProps<{
-                nendo: string;
-                ledgerCd: string;
-              }>
-            ) => {
-              const p = routeProps.match.params;
-              const query = useQuery();
-              let month = query.get("month");
-              let pageNo = query.get("page_no");
-              let pageSize = query.get("page_size");
-
-              let isStateUpdated = false;
-              let isUrlRewriteRequired = false;
-              const setStateUpdated = () => {
-                isStateUpdated = true;
-              };
-              const setUrlRewriteRequired = () => {
-                isUrlRewriteRequired = true;
-              };
-
-              const update = updateState(setStateUpdated);
-              const get = getRestoreValue(setUrlRewriteRequired);
-
-              update(month, ledgerMonth, setLedgerMonth);
-              update(pageNo, ledgerPageNo, setLedgerPageNo);
-              update(pageSize, ledgerPageSize, setLedgerPageSize);
-              month = get(month, ledgerMonth, "all");
-              pageNo = get(pageNo, ledgerPageNo, "1");
-              pageSize = get(pageSize, ledgerPageSize, "10");
-              if (isUrlRewriteRequired) {
-                setUrl(routeProps.history)({
-                  nendo: p.nendo,
-                  showLedger: true,
-                  ledgerCd: p.ledgerCd,
-                  ledgerMonth: month,
-                  pageNo: pageNo == null ? undefined : Number(pageNo),
-                  pageSize: pageSize == null ? undefined : Number(pageSize),
-                });
-              }
-
-              if (isStateUpdated || isUrlRewriteRequired) {
-                return <></>;
-              }
-              const nendo = p.nendo;
-              const showLedger = true;
-              const ledgerCd = p.ledgerCd;
-              const params = createHeaderParams({
-                nendo,
-                showLedger,
-                ledgerCd,
-                ledgerMonth: month,
-              });
-              return (
-                // <Context.Provider
-                //   value={Object.assign(contextValue, {
-                //     history: routeProps.history,
-                //     nendo: p.nendo,
-                //     ledgerCd: p.ledgerCd,
-                //     showLedger: true,
-                //     ledgerMonth: query.get("month"),
-                //   })}
-                // >
-                <>
-                  <Header {...params} />
-                  <hr />
-                  <LedgerList
-                    nendo={p.nendo}
-                    ledgerCd={p.ledgerCd}
-                    ledgerMonth={month}
-                    pageNo={Number(pageNo)}
-                    pageSize={Number(pageSize)}
-                  />
-                </>
-                // </Context.Provider>
-              );
-            }}
-          />
-        </Switch>
+        <Routes>
+          <Route path="/" element={<X />} />
+          <Route path="/:nendo" element={<Y />} />
+          <Route path="/:nendo/journal" element={<Z />} />
+          <Route path="/:nendo/ledger" element={<A />} />
+          <Route path="/:nendo/ledger/:ledgerCd" element={<B />} />
+        </Routes>
       </BrowserRouter>
     </div>
   );

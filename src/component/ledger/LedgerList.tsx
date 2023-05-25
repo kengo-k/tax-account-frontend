@@ -14,10 +14,10 @@ import {
 } from "@component/ledger/LedgerListError";
 import { LedgerSearchResponse } from "@common/model/journal/LedgerSearchResponse";
 import { SaimokuMasterEntity } from "@common/model/master/SaimokuMasterEntity";
-import { useHistory } from "react-router";
 import { LedgerSearchRequest } from "@common/model/journal/LedgerSearchRequest";
 import { getPageList } from "@component/misc";
 import { selectSaimokuMap } from "@module/selector/selectSaimokuMap";
+import { useNavigate } from "react-router";
 
 export const LedgerList = (props: {
   nendo: string;
@@ -26,7 +26,7 @@ export const LedgerList = (props: {
   pageNo: number;
   pageSize: number;
 }) => {
-  const history = useHistory();
+  const history = useNavigate();
   const { loadLedger } = useActions();
   const state = useState();
   const saimokuMap = useSelector(selectSaimokuMap);
@@ -79,7 +79,7 @@ export const LedgerList = (props: {
                 onClick={() => {
                   const url = new URL(location.href);
                   url.searchParams.set("page_no", `${pageNo}`);
-                  history.push(`${url.pathname}${url.search}`);
+                  history(`${url.pathname}${url.search}`);
                 }}
                 className={`pageNo ${
                   pageNo !== props.pageNo ? "clickable" : ""

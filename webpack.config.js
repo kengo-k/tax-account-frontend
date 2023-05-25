@@ -1,6 +1,5 @@
 const path = require("path");
 const webpack = require("webpack");
-
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 
 const sourcePath = path.resolve(__dirname, "./src");
@@ -13,11 +12,7 @@ module.exports = {
   mode: "development",
   devtool: "inline-source-map",
   entry: {
-    "js/index": [
-      "webpack-dev-server/client",
-      "webpack/hot/dev-server",
-      `${sourcePath}/index.tsx`,
-    ],
+    "js/index": `${sourcePath}/index.tsx`,
     "style/style": `${sourcePath}/style/style.scss`,
   },
   output: {
@@ -42,27 +37,32 @@ module.exports = {
       "@module": path.resolve(__dirname, "src/module"),
       "@config": path.resolve(__dirname, "src/config"),
       "@api": path.resolve(__dirname, "src/api"),
-      "@component": path.resolve(__dirname, "src/component"),
+           "@component": path.resolve(__dirname, "src/component"),
       "@common": path.resolve(__dirname, "src/common"),
     },
   },
   devServer: {
-    contentBase: htmlContentPath,
-    watchContentBase: true,
     hot: true,
-    inline: true,
-    disableHostCheck: true,
     historyApiFallback: true,
   },
   plugins: [
-    new webpack.HotModuleReplacementPlugin(),
     new MiniCssExtractPlugin({ filename: "[name].css" }),
     new webpack.DefinePlugin({
-      NODE_ENV: JSON.stringify(environment),
+      'process.env.NODE_ENV': JSON.stringify(environment),
     }),
   ],
   externals: {
-    react: "React",
-    "react-dom": "ReactDOM",
+    react: {
+      commonjs: 'react',
+      commonjs2: 'react',
+      amd: 'react',
+      root: 'React',
+    },
+    'react-dom': {
+      commonjs: 'react-dom',
+      commonjs2: 'react-dom',
+      amd: 'react-dom',
+      root: 'ReactDOM',
+    },
   },
 };

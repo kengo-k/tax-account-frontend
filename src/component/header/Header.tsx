@@ -1,7 +1,7 @@
 import * as React from "react";
-import { useHistory } from "react-router";
 import Numeral from "numeral";
 import { useActions, useState } from "@module/action";
+import { useNavigate } from "react-router";
 
 export interface HeaderParams {
   nendo: string | undefined;
@@ -101,7 +101,7 @@ export const Header = (props: HeaderParams) => {
     setLedgerMonth(props.ledgerMonth);
   }, [props.ledgerMonth]);
 
-  const history = useHistory();
+  const history = useNavigate();
   return (
     <>
       <div className="mainHeaderRoot">
@@ -112,7 +112,7 @@ export const Header = (props: HeaderParams) => {
             <select
               value={props.nendo}
               onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
-                history.push(
+                history(
                   createUrl({
                     nendo: e.target.value,
                     ledgerCd: props.ledgerCd,
@@ -142,7 +142,7 @@ export const Header = (props: HeaderParams) => {
                 if (journalRef.current?.checked) {
                   setJournalChecked(true);
                   setLedgerChecked(false);
-                  history.push(
+                  history(
                     createUrl({
                       nendo: props.nendo,
                       ledgerCd: undefined,
@@ -154,7 +154,7 @@ export const Header = (props: HeaderParams) => {
                   );
                 } else {
                   setJournalChecked(false);
-                  history.push(
+                  history(
                     createUrl({
                       nendo: props.nendo,
                       ledgerCd: undefined,
@@ -183,7 +183,7 @@ export const Header = (props: HeaderParams) => {
                   setLedgerChecked(true);
                   setJournalChecked(false);
                   if (state.tmpLedgerCd != null) {
-                    history.push(
+                    history(
                       createUrl({
                         nendo: props.nendo,
                         ledgerCd: state.tmpLedgerCd,
@@ -194,7 +194,7 @@ export const Header = (props: HeaderParams) => {
                       })
                     );
                   } else {
-                    history.push(
+                    history(
                       createUrl({
                         nendo: props.nendo,
                         ledgerCd: undefined,
@@ -207,7 +207,7 @@ export const Header = (props: HeaderParams) => {
                   }
                 } else {
                   setLedgerChecked(false);
-                  history.push(
+                  history(
                     createUrl({
                       nendo: props.nendo,
                       ledgerCd: undefined,
@@ -230,7 +230,7 @@ export const Header = (props: HeaderParams) => {
               setLedger({ all_count: 0, list: [] });
               setLedgerCd(e.target.value);
               setTmpLedgerCd(e.target.value);
-              history.push(
+              history(
                 createUrl({
                   nendo: props.nendo,
                   ledgerCd: e.target.value,
@@ -270,7 +270,7 @@ export const Header = (props: HeaderParams) => {
                     onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
                       const value = e.target.value; //=== "" ? undefined : e.target.value;
                       setLedgerMonth(value);
-                      history.push(
+                      history(
                         createUrl({
                           nendo: props.nendo,
                           ledgerCd: props.ledgerCd,
@@ -319,7 +319,7 @@ export const Header = (props: HeaderParams) => {
                 onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
                   const value = e.target.value;
                   setJournalsOrder(value);
-                  history.push(
+                  history(
                     createUrl({
                       nendo: props.nendo,
                       ledgerCd: undefined,

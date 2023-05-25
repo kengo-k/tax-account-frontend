@@ -9,9 +9,7 @@ const render = () => {
     ReactDOM.unmountComponentAtNode(MOUNT_NODE);
     ReactDOM.render(
       <Hmr>
-        <DefaultTypelessProvider>
-          <Application />
-        </DefaultTypelessProvider>
+        <DefaultTypelessProvider />
       </Hmr>,
       MOUNT_NODE
     );

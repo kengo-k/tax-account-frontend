@@ -9,7 +9,7 @@ import {
   JournalSearchRequest,
 } from "@common/model/journal/JournalSearchRequest";
 import { getPageList } from "@component/misc";
-import { useHistory } from "react-router";
+import { useNavigate } from "react-router";
 
 export const JournalList = (props: {
   nendo: string;
@@ -17,7 +17,7 @@ export const JournalList = (props: {
   pageNo: number;
   pageSize: number;
 }) => {
-  const history = useHistory();
+  const history = useNavigate();
   const { loadJournals } = useActions();
   const { journalList } = useState();
   const saimokuMap = useSelector(selectSaimokuMap);
@@ -60,7 +60,7 @@ export const JournalList = (props: {
                 onClick={() => {
                   const url = new URL(location.href);
                   url.searchParams.set("page_no", `${pageNo}`);
-                  history.push(`${url.pathname}${url.search}`);
+                  history(`${url.pathname}${url.search}`);
                 }}
                 className={`pageNo ${
                   pageNo !== props.pageNo ? "clickable" : ""
